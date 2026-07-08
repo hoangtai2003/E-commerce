@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aurora Admin — Quản trị E-commerce</title>
+
+  <!-- Google Fonts: Plus Jakarta Sans (heading) + Inter (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app" id="app">
+
+    <!-- ===================== SIDEBAR ===================== -->
+    <aside class="sidebar" id="sidebar" aria-label="Điều hướng chính">
+      <div class="sidebar__brand">
+        <div class="brand-mark" aria-hidden="true">
+          <i data-lucide="sparkles"></i>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">Aurora</span>
+          <span class="brand-sub">E-commerce Admin</span>
+        </div>
+        <button class="icon-btn sidebar__close" id="sidebarClose" aria-label="Đóng menu">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <nav class="sidebar__nav">
+        <p class="nav-label">Tổng quan</p>
+        <a href="#" class="nav-item active" data-page="dashboard">
+          <i data-lucide="layout-dashboard"></i><span class="nav-text">Dashboard</span>
+        </a>
+
+        <p class="nav-label">Vận hành</p>
+        <a href="#" class="nav-item" data-page="products">
+          <i data-lucide="package"></i><span class="nav-text">Sản phẩm</span>
+        </a>
+        <a href="#" class="nav-item" data-page="orders">
+          <i data-lucide="shopping-cart"></i><span class="nav-text">Đơn hàng</span>
+          <span class="nav-badge" id="ordersNavBadge">0</span>
+        </a>
+        <a href="#" class="nav-item" data-page="customers">
+          <i data-lucide="users"></i><span class="nav-text">Khách hàng</span>
+        </a>
+        <a href="#" class="nav-item" data-page="promos">
+          <i data-lucide="ticket-percent"></i><span class="nav-text">Khuyến mãi</span>
+        </a>
+
+        <p class="nav-label">Hệ thống</p>
+        <a href="#" class="nav-item" data-page="staff">
+          <i data-lucide="shield-check"></i><span class="nav-text">Nhân viên</span>
+        </a>
+        <a href="#" class="nav-item" data-page="settings">
+          <i data-lucide="settings"></i><span class="nav-text">Cài đặt</span>
+        </a>
+      </nav>
+
+      <div class="sidebar__footer">
+        <div class="sidebar__user">
+          <div class="avatar avatar--sm">ML</div>
+          <div class="sidebar__user-info nav-text">
+            <strong>Minh Lê</strong>
+            <span>Quản trị viên</span>
+          </div>
+        </div>
+        <button class="icon-btn collapse-btn" id="collapseBtn" aria-label="Thu gọn sidebar" title="Thu gọn / Mở rộng">
+          <i data-lucide="chevrons-left"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Lớp phủ khi mở drawer trên mobile -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- ===================== KHU VỰC CHÍNH ===================== -->
+    <div class="main">
+
+      <!-- Top bar -->
+      <header class="topbar">
+        <button class="icon-btn hamburger" id="hamburgerBtn" aria-label="Mở menu">
+          <i data-lucide="menu"></i>
+        </button>
+
+        <div class="search" role="search">
+          <i data-lucide="search"></i>
+          <input type="text" id="globalSearch" placeholder="Tìm sản phẩm, đơn hàng, khách hàng…" />
+          <kbd>/</kbd>
+        </div>
+
+        <div class="topbar__actions">
+          <button class="icon-btn" id="themeToggle" aria-label="Chuyển chế độ sáng / tối" title="Chế độ sáng / tối">
+            <i data-lucide="moon"></i>
+          </button>
+
+          <div class="dropdown" id="notifDropdown">
+            <button class="icon-btn" id="notifBtn" aria-label="Thông báo">
+              <i data-lucide="bell"></i>
+              <span class="badge-dot" id="notifBadge">3</span>
+            </button>
+            <div class="dropdown__panel dropdown__panel--wide" id="notifPanel">
+              <div class="dropdown__head">
+                <strong>Thông báo</strong>
+                <button class="link-btn" id="markAllRead">Đánh dấu đã đọc</button>
+              </div>
+              <div class="notif-list" id="notifList"><!-- JS render --></div>
+            </div>
+          </div>
+
+          <div class="dropdown" id="userDropdown">
+            <button class="user-chip" id="userBtn" aria-haspopup="menu">
+              <div class="avatar">ML</div>
+              <span class="user-chip__name">Minh Lê</span>
+              <i data-lucide="chevron-down"></i>
+            </button>
+            <div class="dropdown__panel" id="userPanel" role="menu">
+              <a href="#" class="dropdown__item" data-page="settings"><i data-lucide="user"></i> Hồ sơ của tôi</a>
+              <a href="#" class="dropdown__item" data-page="settings"><i data-lucide="settings"></i> Cài đặt</a>
+              <hr />
+              <a href="#" class="dropdown__item dropdown__item--danger" id="logoutBtn"><i data-lucide="log-out"></i> Đăng xuất</a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Nội dung các trang -->
+      <main class="content" id="content">
+
+        <!-- ========== DASHBOARD ========== -->
+        <section class="page active" id="page-dashboard" data-title="Dashboard">
+          <div class="page-head">
+            <div>
+              <h1>Chào buổi sáng, Minh 👋</h1>
+              <p class="page-sub">Đây là bức tranh kinh doanh của cửa hàng hôm nay.</p>
+            </div>
+            <div class="page-head__actions">
+              <button class="btn btn--ghost" id="exportBtn"><i data-lucide="download"></i> Xuất báo cáo</button>
+              <button class="btn btn--primary" data-goto="products" data-action="add-product"><i data-lucide="plus"></i> Thêm sản phẩm</button>
+            </div>
+          </div>
+
+          <div class="kpi-grid" id="kpiGrid"><!-- JS render --></div>
+
+          <div class="grid-2-1">
+            <div class="card chart-card">
+              <div class="card__head">
+                <div>
+                  <h3>Doanh thu</h3>
+                  <p class="card__sub">Theo dõi dòng tiền theo thời gian</p>
+                </div>
+                <div class="seg" id="revenueSeg">
+                  <button class="seg__btn active" data-period="day">Ngày</button>
+                  <button class="seg__btn" data-period="week">Tuần</button>
+                  <button class="seg__btn" data-period="month">Tháng</button>
+                </div>
+              </div>
+              <div class="chart-wrap"><canvas id="revenueChart"></canvas></div>
+            </div>
+
+            <div class="card chart-card">
+              <div class="card__head">
+                <div>
+                  <h3>Doanh thu theo danh mục</h3>
+                  <p class="card__sub">Tỷ trọng 30 ngày qua</p>
+                </div>
+              </div>
+              <div class="chart-wrap chart-wrap--doughnut"><canvas id="categoryChart"></canvas></div>
+              <div class="legend" id="categoryLegend"><!-- JS render --></div>
+            </div>
+          </div>
+
+          <div class="grid-3">
+            <div class="card">
+              <div class="card__head">
+                <h3>Sản phẩm bán chạy</h3>
+                <button class="link-btn" data-goto="products">Xem tất cả</button>
+              </div>
+              <div class="top-products" id="topProducts"><!-- JS render --></div>
+            </div>
+
+            <div class="card">
+              <div class="card__head">
+                <h3>Đơn hàng gần đây</h3>
+                <button class="link-btn" data-goto="orders">Xem tất cả</button>
+              </div>
+              <div class="mini-orders" id="recentOrders"><!-- JS render --></div>
+            </div>
+
+            <div class="card">
+              <div class="card__head">
+                <h3>Hoạt động gần đây</h3>
+                <button class="icon-btn icon-btn--sm" id="activityReload" title="Tải lại"><i data-lucide="refresh-cw"></i></button>
+              </div>
+              <div class="activity" id="activityFeed"><!-- JS render (demo error state) --></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========== SẢN PHẨM ========== -->
+        <section class="page" id="page-products" data-title="Sản phẩm">
+          <div class="page-head">
+            <div>
+              <h1>Sản phẩm</h1>
+              <p class="page-sub">Quản lý kho hàng, danh mục và biến thể.</p>
+            </div>
+            <div class="page-head__actions">
+              <button class="btn btn--primary" id="addProductBtn"><i data-lucide="plus"></i> Thêm sản phẩm</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="toolbar">
+              <div class="search search--table">
+                <i data-lucide="search"></i>
+                <input type="text" id="productSearch" placeholder="Tìm theo tên hoặc SKU…" />
+              </div>
+              <div class="toolbar__filters">
+                <select class="select" id="productCategory"><option value="all">Tất cả danh mục</option></select>
+                <select class="select" id="productStatus">
+                  <option value="all">Mọi trạng thái</option>
+                  <option value="active">Đang bán</option>
+                  <option value="low">Sắp hết hàng</option>
+                  <option value="out">Hết hàng</option>
+                  <option value="hidden">Đang ẩn</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="table" id="productTable">
+                <thead>
+                  <tr>
+                    <th data-sort="name" class="sortable">Sản phẩm <i data-lucide="chevrons-up-down"></i></th>
+                    <th>Danh mục</th>
+                    <th data-sort="price" class="sortable">Giá <i data-lucide="chevrons-up-down"></i></th>
+                    <th data-sort="stock" class="sortable">Tồn kho <i data-lucide="chevrons-up-down"></i></th>
+                    <th data-sort="sold" class="sortable">Đã bán <i data-lucide="chevrons-up-down"></i></th>
+                    <th>Trạng thái</th>
+                    <th class="th-actions">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody id="productTbody"><!-- JS render --></tbody>
+              </table>
+            </div>
+            <div class="table-foot">
+              <p class="table-count" id="productCount"></p>
+              <div class="pagination" id="productPagination"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========== ĐƠN HÀNG ========== -->
+        <section class="page" id="page-orders" data-title="Đơn hàng">
+          <div class="page-head">
+            <div>
+              <h1>Đơn hàng</h1>
+              <p class="page-sub">Theo dõi và xử lý đơn hàng của khách.</p>
+            </div>
+          </div>
+
+          <div class="status-tabs" id="orderTabs">
+            <button class="status-tab active" data-status="all">Tất cả <span></span></button>
+            <button class="status-tab" data-status="pending">Chờ xử lý <span></span></button>
+            <button class="status-tab" data-status="shipping">Đang giao <span></span></button>
+            <button class="status-tab" data-status="completed">Hoàn thành <span></span></button>
+            <button class="status-tab" data-status="cancelled">Đã hủy <span></span></button>
+          </div>
+
+          <div class="card">
+            <div class="toolbar">
+              <div class="search search--table">
+                <i data-lucide="search"></i>
+                <input type="text" id="orderSearch" placeholder="Tìm theo mã đơn hoặc tên khách…" />
+              </div>
+              <div class="toolbar__filters">
+                <select class="select" id="orderPayment">
+                  <option value="all">Mọi thanh toán</option>
+                  <option value="COD">COD</option>
+                  <option value="Chuyển khoản">Chuyển khoản</option>
+                  <option value="Thẻ tín dụng">Thẻ tín dụng</option>
+                  <option value="Ví MoMo">Ví MoMo</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="table" id="orderTable">
+                <thead>
+                  <tr>
+                    <th data-sort="code" class="sortable">Mã đơn <i data-lucide="chevrons-up-down"></i></th>
+                    <th>Khách hàng</th>
+                    <th data-sort="date" class="sortable">Ngày đặt <i data-lucide="chevrons-up-down"></i></th>
+                    <th>Thanh toán</th>
+                    <th data-sort="total" class="sortable">Tổng tiền <i data-lucide="chevrons-up-down"></i></th>
+                    <th>Trạng thái</th>
+                    <th class="th-actions">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody id="orderTbody"></tbody>
+              </table>
+            </div>
+            <div class="table-foot">
+              <p class="table-count" id="orderCount"></p>
+              <div class="pagination" id="orderPagination"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========== KHÁCH HÀNG ========== -->
+        <section class="page" id="page-customers" data-title="Khách hàng">
+          <div class="page-head">
+            <div>
+              <h1>Khách hàng</h1>
+              <p class="page-sub">Chân dung và lịch sử mua sắm của khách.</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="toolbar">
+              <div class="search search--table">
+                <i data-lucide="search"></i>
+                <input type="text" id="customerSearch" placeholder="Tìm theo tên, email, SĐT…" />
+              </div>
+              <div class="toolbar__filters">
+                <select class="select" id="customerTier">
+                  <option value="all">Mọi hạng</option>
+                  <option value="vip">VIP</option>
+                  <option value="loyal">Thân thiết</option>
+                  <option value="new">Mới</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="table" id="customerTable">
+                <thead>
+                  <tr>
+                    <th data-sort="name" class="sortable">Khách hàng <i data-lucide="chevrons-up-down"></i></th>
+                    <th>Liên hệ</th>
+                    <th data-sort="orders" class="sortable">Đơn hàng <i data-lucide="chevrons-up-down"></i></th>
+                    <th data-sort="spent" class="sortable">Tổng chi tiêu <i data-lucide="chevrons-up-down"></i></th>
+                    <th>Hạng</th>
+                    <th class="th-actions">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody id="customerTbody"></tbody>
+              </table>
+            </div>
+            <div class="table-foot">
+              <p class="table-count" id="customerCount"></p>
+              <div class="pagination" id="customerPagination"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========== KHUYẾN MÃI ========== -->
+        <section class="page" id="page-promos" data-title="Khuyến mãi">
+          <div class="page-head">
+            <div>
+              <h1>Khuyến mãi</h1>
+              <p class="page-sub">Tạo và theo dõi hiệu quả mã giảm giá.</p>
+            </div>
+            <div class="page-head__actions">
+              <button class="btn btn--primary" id="addPromoBtn"><i data-lucide="plus"></i> Tạo mã giảm giá</button>
+            </div>
+          </div>
+          <div class="promo-grid" id="promoGrid"><!-- JS render --></div>
+        </section>
+
+        <!-- ========== NHÂN VIÊN ========== -->
+        <section class="page" id="page-staff" data-title="Nhân viên">
+          <div class="page-head">
+            <div>
+              <h1>Nhân viên &amp; phân quyền</h1>
+              <p class="page-sub">Quản lý tài khoản và quyền truy cập hệ thống.</p>
+            </div>
+            <div class="page-head__actions">
+              <button class="btn btn--primary" id="addStaffBtn"><i data-lucide="user-plus"></i> Thêm nhân viên</button>
+            </div>
+          </div>
+
+          <div class="role-cards" id="roleCards"><!-- JS render --></div>
+
+          <div class="card">
+            <div class="table-wrap">
+              <table class="table" id="staffTable">
+                <thead>
+                  <tr>
+                    <th>Nhân viên</th>
+                    <th>Vai trò</th>
+                    <th>Trạng thái</th>
+                    <th>Hoạt động gần nhất</th>
+                    <th class="th-actions">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody id="staffTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========== CÀI ĐẶT ========== -->
+        <section class="page" id="page-settings" data-title="Cài đặt">
+          <div class="page-head">
+            <div>
+              <h1>Cài đặt</h1>
+              <p class="page-sub">Cấu hình cửa hàng và tuỳ chọn hệ thống.</p>
+            </div>
+          </div>
+
+          <div class="settings-grid">
+            <div class="card settings-card">
+              <div class="card__head"><h3><i data-lucide="store"></i> Thông tin cửa hàng</h3></div>
+              <form id="storeForm" class="form">
+                <div class="form-row">
+                  <label class="field">
+                    <span>Tên cửa hàng</span>
+                    <input type="text" class="input" value="Aurora Store" />
+                  </label>
+                  <label class="field">
+                    <span>Email liên hệ</span>
+                    <input type="email" class="input" value="hello@aurora.vn" />
+                  </label>
+                </div>
+                <div class="form-row">
+                  <label class="field">
+                    <span>Số điện thoại</span>
+                    <input type="tel" class="input" value="0901 234 567" />
+                  </label>
+                  <label class="field">
+                    <span>Đơn vị tiền tệ</span>
+                    <select class="select select--full">
+                      <option selected>VND — Việt Nam Đồng</option>
+                      <option>USD — US Dollar</option>
+                    </select>
+                  </label>
+                </div>
+                <label class="field">
+                  <span>Địa chỉ</span>
+                  <input type="text" class="input" value="125 Xuân Thủy, Cầu Giấy, Hà Nội" />
+                </label>
+                <div class="form-actions">
+                  <button type="submit" class="btn btn--primary">Lưu thay đổi</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="card settings-card">
+              <div class="card__head"><h3><i data-lucide="palette"></i> Giao diện</h3></div>
+              <div class="setting-row">
+                <div>
+                  <strong>Chế độ tối</strong>
+                  <p>Giảm mỏi mắt khi làm việc ban đêm.</p>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="darkModeSwitch" />
+                  <span class="switch__track"></span>
+                </label>
+              </div>
+              <div class="setting-row">
+                <div>
+                  <strong>Thu gọn sidebar mặc định</strong>
+                  <p>Hiển thị nhiều nội dung hơn trên màn hình.</p>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="compactSwitch" />
+                  <span class="switch__track"></span>
+                </label>
+              </div>
+
+              <div class="card__head" style="margin-top: 20px;"><h3><i data-lucide="bell-ring"></i> Thông báo</h3></div>
+              <div class="setting-row">
+                <div>
+                  <strong>Đơn hàng mới</strong>
+                  <p>Nhận thông báo khi có đơn hàng mới.</p>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" checked />
+                  <span class="switch__track"></span>
+                </label>
+              </div>
+              <div class="setting-row">
+                <div>
+                  <strong>Cảnh báo tồn kho</strong>
+                  <p>Nhắc khi sản phẩm sắp hết hàng.</p>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" checked />
+                  <span class="switch__track"></span>
+                </label>
+              </div>
+
+              <div class="danger-zone">
+                <div>
+                  <strong>Đặt lại dữ liệu demo</strong>
+                  <p>Khôi phục toàn bộ dữ liệu mẫu về trạng thái ban đầu.</p>
+                </div>
+                <button class="btn btn--danger-outline" id="resetDataBtn">Đặt lại</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal & Toast root -->
+  <div class="modal-root" id="modalRoot"></div>
+  <div class="toast-root" id="toastRoot"></div>
+
+  <!-- Thư viện ngoài -->
+  <script src="https://unpkg.com/lucide@0.462.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
