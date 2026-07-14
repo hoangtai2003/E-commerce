@@ -11,7 +11,8 @@ import {
   ShieldCheck, 
   Settings, 
   ChevronsLeft,
-  ScanBarcode
+  ScanBarcode,
+  Tags
 } from 'lucide-react';
 import { mockOrders } from '../../data/mock';
 
@@ -59,6 +60,9 @@ export function Sidebar({ isMobileOpen, onCloseMobile, isCollapsed, onToggleColl
           <p className="nav-label">Vận hành</p>
           <NavLink to="/products" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <Package size={20} /><span className="nav-text">Sản phẩm</span>
+          </NavLink>
+          <NavLink to="/categories" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <Tags size={20} /><span className="nav-text">Danh mục</span>
           </NavLink>
           <NavLink to="/orders" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <ShoppingCart size={20} /><span className="nav-text">Đơn hàng</span>

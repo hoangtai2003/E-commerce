@@ -8,6 +8,7 @@ import { Customers } from './pages/Customers';
 import { Promos } from './pages/Promos';
 import { Staff } from './pages/Staff';
 import { Login } from './pages/Login';
+import { Categories } from './pages/Categories';
 import { POS } from './pages/POS';
 import { ToastProvider } from './contexts/ToastContext';
 import './assets/style.css'; // Import CSS toàn cục
@@ -22,6 +23,7 @@ function App() {
                         <Route index element={<Dashboard />} />
                         <Route path="pos" element={<POS />} />
                         <Route path="products" element={<Products />} />
+                        <Route path="categories" element={<Categories />} />
                         <Route path="orders" element={<Orders />} />
                         <Route path="customers" element={<Customers />} />
                         <Route path="promos" element={<Promos />} />
