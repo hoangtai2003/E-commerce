@@ -3,6 +3,7 @@ import { Plus, Copy, Pencil, Trash2 } from 'lucide-react';
 import { mockPromos } from '../data/mock';
 import type { Promo } from '../types';
 import { useToast } from '../contexts/ToastContext';
+import { Modal } from '../components/ui/Modal';
 
 const fmtMoney = (n: number) => n.toLocaleString("vi-VN") + "₫";
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("vi-VN");
@@ -10,9 +11,26 @@ const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("vi-VN");
 export function Promos() {
   const { showToast } = useToast();
   const [promos, setPromos] = useState<Promo[]>(mockPromos);
+  const [editingPromo, setEditingPromo] = useState<Promo | 'new' | null>(null);
+  
+  const handleSave = () => {
+    showToast('success', editingPromo === 'new' ? 'Đã tạo mã giảm giá' : 'Đã lưu thay đổi', 'Thông tin khuyến mãi đã được cập nhật.');
+    setEditingPromo(null);
+  };
 
   const togglePromo = (id: number) => {
-    setPromos(promos.map(p => p.id === id ? { ...p, active: !p.active } : p));
+    setPromos(promos.map(p => {
+      if (p.id === id) {
+        const newActive = !p.active;
+        if (newActive) {
+          showToast('success', 'Đã bật mã giảm giá', `Mã ${p.code} hiện áp dụng được.`);
+        } else {
+          showToast('info', 'Đã tắt mã giảm giá', `Mã ${p.code} hiện ngừng áp dụng.`);
+        }
+        return { ...p, active: newActive };
+      }
+      return p;
+    }));
   };
 
   const copyToClipboard = (text: string) => {
@@ -31,7 +49,7 @@ export function Promos() {
           <p className="page-sub">Tạo và theo dõi hiệu quả mã giảm giá.</p>
         </div>
         <div className="page-head__actions">
-          <button className="btn btn--primary" onClick={() => showToast('info', 'Chức năng sẽ sớm ra mắt')}>
+          <button className="btn btn--primary" onClick={() => setEditingPromo('new')}>
             <Plus size={18} /> Tạo mã giảm giá
           </button>
         </div>
@@ -80,8 +98,13 @@ export function Promos() {
                     <span className="switch__track"></span>
                   </label>
                   <div className="actions">
-                    <button className="icon-btn icon-btn--sm" title="Sửa"><Pencil size={16} /></button>
-                    <button className="icon-btn icon-btn--sm" title="Xóa"><Trash2 size={16} /></button>
+                    <button className="icon-btn icon-btn--sm" title="Sửa" onClick={() => setEditingPromo(pr)}><Pencil size={16} /></button>
+                    <button className="icon-btn icon-btn--sm" title="Xóa" onClick={() => {
+                      if (window.confirm(`Xóa mã giảm giá ${pr.code}?`)) {
+                        setPromos(promos.filter(x => x.id !== pr.id));
+                        showToast('success', 'Đã xóa mã giảm giá', `Mã ${pr.code} đã được gỡ bỏ.`);
+                      }
+                    }}><Trash2 size={16} /></button>
                   </div>
                 </div>
               </article>
@@ -89,6 +112,59 @@ export function Promos() {
           })
         )}
       </div>
+
+      <Modal
+        isOpen={editingPromo !== null}
+        onClose={() => setEditingPromo(null)}
+        title={editingPromo === 'new' ? 'Tạo mã giảm giá' : 'Chỉnh sửa mã giảm giá'}
+        size="lg"
+        footer={
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', width: '100%' }}>
+            <button className="btn btn--ghost" onClick={() => setEditingPromo(null)}>Hủy bỏ</button>
+            <button className="btn btn--primary" onClick={handleSave}>{editingPromo === 'new' ? 'Tạo mã mới' : 'Lưu thay đổi'}</button>
+          </div>
+        }
+      >
+        <form className="form" onSubmit={e => { e.preventDefault(); handleSave(); }}>
+          <div className="form-row">
+            <label className="field">
+              <span>Mã code *</span>
+              <input className="input" style={{ textTransform: 'uppercase' }} defaultValue={editingPromo !== 'new' && editingPromo ? editingPromo.code : ''} placeholder="VD: SALE50" />
+            </label>
+            <label className="field">
+              <span>Loại giảm giá</span>
+              <select className="select select--full" defaultValue={editingPromo !== 'new' && editingPromo ? editingPromo.type : 'percent'}>
+                <option value="percent">Theo phần trăm (%)</option>
+                <option value="fixed">Số tiền cố định</option>
+              </select>
+            </label>
+          </div>
+          <div className="form-row">
+            <label className="field">
+              <span>Giá trị giảm *</span>
+              <input className="input" type="number" defaultValue={editingPromo !== 'new' && editingPromo ? editingPromo.value : ''} placeholder="VD: 20" />
+            </label>
+            <label className="field">
+              <span>Đơn tối thiểu</span>
+              <input className="input" type="number" defaultValue={editingPromo !== 'new' && editingPromo ? editingPromo.minOrder : ''} placeholder="VD: 200000" />
+            </label>
+          </div>
+          <div className="form-row">
+            <label className="field">
+              <span>Giới hạn sử dụng</span>
+              <input className="input" type="number" defaultValue={editingPromo !== 'new' && editingPromo ? editingPromo.limit : ''} placeholder="VD: 500" />
+            </label>
+            <label className="field">
+              <span>Ngày hết hạn *</span>
+              <input className="input" type="date" defaultValue={editingPromo !== 'new' && editingPromo ? editingPromo.end.split("T")[0] : ''} />
+            </label>
+          </div>
+          <label className="field">
+            <span>Mô tả ngắn</span>
+            <input className="input" defaultValue={editingPromo !== 'new' && editingPromo ? editingPromo.desc : ''} placeholder="VD: Ưu đãi hè cho mọi đơn hàng" />
+          </label>
+        </form>
+      </Modal>
     </section>
   );
 }

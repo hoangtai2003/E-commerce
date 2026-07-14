@@ -1,8 +1,21 @@
+import { useState } from 'react';
 import { Store, Palette, BellRing } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext';
+import { Modal } from '../components/ui/Modal';
+
+interface MainLayoutContext {
+    isDarkMode: boolean;
+    toggleTheme: () => void;
+    isCollapsed: boolean;
+    toggleCollapse: () => void;
+}
 
 export function Settings() {
     const { showToast } = useToast();
+    const { isDarkMode, toggleTheme, isCollapsed, toggleCollapse } = useOutletContext<MainLayoutContext>();
+    const [showResetModal, setShowResetModal] = useState(false);
+
     return (
         <section className="page active" id="page-settings" data-title="Cài đặt">
             <div className="page-head">
@@ -58,8 +71,12 @@ export function Settings() {
                     <div className="setting-row">
                         <div>
                             <strong>Chế độ tối</strong>
-                            <p>Có thể bật tắt trực tiếp ở trên TopBar.</p>
+                            <p>Giảm mỏi mắt khi làm việc ban đêm.</p>
                         </div>
+                        <label className="switch">
+                            <input type="checkbox" checked={isDarkMode} onChange={toggleTheme} />
+                            <span className="switch__track"></span>
+                        </label>
                     </div>
                     <div className="setting-row">
                         <div>
@@ -67,7 +84,7 @@ export function Settings() {
                             <p>Hiển thị nhiều nội dung hơn trên màn hình.</p>
                         </div>
                         <label className="switch">
-                            <input type="checkbox" />
+                            <input type="checkbox" checked={isCollapsed} onChange={toggleCollapse} />
                             <span className="switch__track"></span>
                         </label>
                     </div>
@@ -101,10 +118,29 @@ export function Settings() {
                             <strong>Đặt lại dữ liệu demo</strong>
                             <p>Khôi phục toàn bộ dữ liệu mẫu về trạng thái ban đầu.</p>
                         </div>
-                        <button className="btn btn--danger" onClick={() => showToast('success', 'Đã khôi phục dữ liệu gốc')}>Khôi phục dữ liệu</button>
+                        <button className="btn btn--danger-outline" onClick={() => setShowResetModal(true)}>Đặt lại</button>
                     </div>
                 </div>
             </div>
+
+            <Modal 
+                isOpen={showResetModal}
+                onClose={() => setShowResetModal(false)}
+                title="Đặt lại dữ liệu demo?"
+                footer={
+                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', width: '100%' }}>
+                        <button className="btn btn--ghost" onClick={() => setShowResetModal(false)}>Hủy bỏ</button>
+                        <button className="btn btn--danger" onClick={() => {
+                            showToast('success', 'Đã khôi phục dữ liệu gốc', 'Toàn bộ dữ liệu mẫu đã được đặt lại.');
+                            setShowResetModal(false);
+                        }}>Đặt lại</button>
+                    </div>
+                }
+            >
+                <p style={{ color: 'var(--text-2)' }}>
+                    Mọi thay đổi bạn đã thực hiện (sản phẩm, đơn hàng, mã giảm giá...) sẽ trở về trạng thái mẫu ban đầu.
+                </p>
+            </Modal>
         </section>
     );
 }

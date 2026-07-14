@@ -37,7 +37,7 @@ export function MainLayout() {
         />
         
         <main className="content" id="content">
-          <Outlet />
+          <Outlet context={{ isDarkMode, toggleTheme, isCollapsed, toggleCollapse: () => setIsCollapsed(!isCollapsed) }} />
         </main>
       </div>
 
