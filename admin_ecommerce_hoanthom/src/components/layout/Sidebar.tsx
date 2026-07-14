@@ -10,7 +10,8 @@ import {
   TicketPercent, 
   ShieldCheck, 
   Settings, 
-  ChevronsLeft
+  ChevronsLeft,
+  ScanBarcode
 } from 'lucide-react';
 import { mockOrders } from '../../data/mock';
 
@@ -46,6 +47,10 @@ export function Sidebar({ isMobileOpen, onCloseMobile, isCollapsed, onToggleColl
         </div>
 
         <nav className="sidebar__nav">
+          <NavLink to="/pos" className={({ isActive }) => `nav-item pos-nav-item ${isActive ? 'active' : ''}`}>
+            <ScanBarcode size={20} /><span className="nav-text">Bán hàng</span>
+          </NavLink>
+          
           <p className="nav-label">Tổng quan</p>
           <NavLink to="/" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} end>
             <LayoutDashboard size={20} /><span className="nav-text">Dashboard</span>
