@@ -34,6 +34,11 @@
   --grad-teal: linear-gradient(135deg, #0EA5A0 0%, #2DD4BF 100%);
   --grad-amber: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
   --grad-rose: linear-gradient(135deg, #F43F5E 0%, #FB7185 100%);
+  --grad-info: linear-gradient(135deg, #0284C7 0%, #38BDF8 100%);
+  --grad-success: linear-gradient(135deg, #16A34A 0%, #4ADE80 100%);
+  --grad-warning: linear-gradient(135deg, #D97706 0%, #FBBF24 100%);
+  --grad-danger: linear-gradient(135deg, #E11D48 0%, #FB7185 100%);
+  --grad-neutral: linear-gradient(135deg, #64748B 0%, #94A3B8 100%);
 
   /* Semantic */
   --success: #16A34A;  --success-soft: rgba(22, 163, 74, 0.12);
@@ -70,7 +75,7 @@
   --topbar-h: 68px;
 
   /* Font */
-  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+  --font-body: "Be Vietnam Pro", "Inter", system-ui, -apple-system, sans-serif;
   --font-display: "Plus Jakarta Sans", var(--font-body);
 
   /* Transition dùng chung */
@@ -348,6 +353,7 @@ hr { border: none; border-top: 1px solid var(--border); margin: 6px 0; }
 }
 .search:focus-within { border-color: var(--primary); background: var(--surface); box-shadow: var(--ring); }
 .search input { flex: 1; border: none; outline: none; background: transparent; min-width: 0; }
+.search input:focus-visible { box-shadow: none; }
 .search input::placeholder { color: var(--text-3); }
 .search .lucide { width: 16px; height: 16px; }
 .search kbd {

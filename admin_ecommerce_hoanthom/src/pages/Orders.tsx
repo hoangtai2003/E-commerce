@@ -2,6 +2,8 @@ import { useState, useMemo } from 'react';
 import { Search, ChevronsUpDown, ChevronUp, ChevronDown, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { mockOrders, mockCustomers, mockProducts } from '../data/mock';
 import type { Order } from '../types';
+import { Modal } from '../components/ui/Modal';
+import { useToast } from '../contexts/ToastContext';
 
 const ORDER_STATUS: Record<string, { label: string, tone: string, grad: string }> = {
   pending:   { label: "Chờ xử lý",  tone: "warning", grad: "var(--grad-amber)" },
@@ -29,12 +31,15 @@ const orderTotal = (order: typeof mockOrders[0]) =>
   }, 0);
 
 export function Orders() {
+  const { showToast } = useToast();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
   const [payment, setPayment] = useState('all');
   const [sortKey, setSortKey] = useState<keyof Order | 'total'>('date');
   const [sortDir, setSortDir] = useState<-1 | 1>(-1);
   const [page, setPage] = useState(1);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [editingStatus, setEditingStatus] = useState<string>('');
   const per = 7;
 
   const filteredOrders = useMemo(() => {
@@ -164,7 +169,12 @@ export function Orders() {
                       <td data-label="Tổng tiền" className="cell-money">{fmtMoney(orderTotal(o))}</td>
                       <td data-label="Trạng thái"><span className={`badge badge--${s.tone}`}>{s.label}</span></td>
                       <td data-label="" className="td-actions">
-                        <button className="icon-btn icon-btn--sm" title="Xem chi tiết"><Eye size={16} /></button>
+                        <button className="icon-btn icon-btn--sm" title="Xem chi tiết" onClick={() => {
+                          setSelectedOrder(o);
+                          setEditingStatus(o.status);
+                        }}>
+                          <Eye size={16} />
+                        </button>
                       </td>
                     </tr>
                   );
@@ -188,6 +198,72 @@ export function Orders() {
           </div>
         </div>
       </div>
+
+      <Modal 
+        isOpen={!!selectedOrder} 
+        onClose={() => setSelectedOrder(null)} 
+        title={`Đơn hàng ${selectedOrder?.code}`}
+        size="lg"
+        footer={
+          <>
+            <button className="btn btn--ghost" onClick={() => setSelectedOrder(null)}>Đóng</button>
+            <button className="btn btn--primary" onClick={() => {
+              showToast('success', 'Đã cập nhật đơn hàng', `${selectedOrder?.code} chuyển sang "${ORDER_STATUS[editingStatus]?.label}".`);
+              setSelectedOrder(null);
+            }}>Cập nhật trạng thái</button>
+          </>
+        }
+      >
+        {selectedOrder && (() => {
+          const c = mockCustomers.find(x => x.id === selectedOrder.customerId);
+          return (
+            <div>
+              <div className="order-meta">
+                <div className="order-meta__item">
+                  <small>Khách hàng</small>
+                  <strong>{c?.name}</strong>
+                  <span className="cell-sub">{c?.phone} · {c?.email}</span>
+                </div>
+                <div className="order-meta__item">
+                  <small>Thanh toán</small>
+                  <strong>{selectedOrder.payment}</strong>
+                  <span className="cell-sub">Đặt lúc {fmtDate(selectedOrder.date)}</span>
+                </div>
+              </div>
+
+              <div className="order-items">
+                {selectedOrder.items.map((it, idx) => {
+                  const p = mockProducts.find(x => x.id === it.productId);
+                  if (!p) return null;
+                  return (
+                    <div className="order-item" key={idx}>
+                      <div className="cell-product__thumb" style={{ background: p.tint }}>{p.emoji}</div>
+                      <div>
+                        <strong style={{ fontSize: 13.5 }}>{p.name}</strong>
+                        <div className="order-item__qty">{it.variant} · SL: {it.qty}</div>
+                      </div>
+                      <span className="order-item__price">{fmtMoney(p.price * it.qty)}</span>
+                    </div>
+                  );
+                })}
+                <div className="order-total">
+                  <span>Tổng cộng</span>
+                  <span>{fmtMoney(orderTotal(selectedOrder))}</span>
+                </div>
+              </div>
+
+              <label className="field">
+                <span>Trạng thái đơn hàng</span>
+                <select className="select select--full" value={editingStatus} onChange={e => setEditingStatus(e.target.value)}>
+                  {Object.entries(ORDER_STATUS).map(([k, v]) => (
+                    <option key={k} value={k}>{v.label}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          );
+        })()}
+      </Modal>
     </section>
   );
 }
