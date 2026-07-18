@@ -3,6 +3,8 @@ from .models import Category
 from .serializers import CategorySerializer
 
 class CategoryViewSet(viewsets.ModelViewSet):
-    queryset = Category.objects.all().order_by('-created_at')
+    queryset = Category.objects.all().order_by('sort_order', '-created_at')
     serializer_class = CategorySerializer
 
+    def perform_destroy(self, instance):
+        instance.soft_delete()

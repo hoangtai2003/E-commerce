@@ -1,3 +1,12 @@
+export interface Category {
+  id: number;
+  name: string;
+  description: string | null;
+  status: "active" | "hidden";
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ProductVariant {
   label: string;
   stock: number;

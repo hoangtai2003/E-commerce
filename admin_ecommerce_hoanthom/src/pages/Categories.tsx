@@ -1,47 +1,91 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Plus, Search, ChevronsUpDown, ChevronUp, ChevronDown, Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { mockProducts, CATEGORIES } from '../data/mock';
+import { mockProducts } from '../data/mock';
+import type { Category } from '../types';
+import { getCategories, createCategory, updateCategory, deleteCategory, type CategoryPayload } from '../services/categories';
 import { useToast } from '../contexts/ToastContext';
 import { Modal } from '../components/ui/Modal';
-
-type CategoryItem = {
-    id: string;
-    name: string;
-    desc: string;
-    status: 'active' | 'hidden';
-};
-
-const mockCategories: CategoryItem[] = CATEGORIES.map(c => ({
-    id: c,
-    name: c,
-    desc: `Cung cấp các sản phẩm thuộc danh mục ${c.toLowerCase()} chất lượng cao.`,
-    status: 'active'
-}));
 
 export function Categories() {
     const { showToast } = useToast();
     const [search, setSearch] = useState('');
-    const [sortKey, setSortKey] = useState<keyof CategoryItem>('name');
+    const [sortKey, setSortKey] = useState<keyof Category>('name');
     const [sortDir, setSortDir] = useState<-1 | 1>(1);
     const [page, setPage] = useState(1);
     const per = 10;
 
-    const [categories, setCategories] = useState<CategoryItem[]>(mockCategories);
-    const [editingCategory, setEditingCategory] = useState<CategoryItem | 'new' | null>(null);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [editingCategory, setEditingCategory] = useState<Category | 'new' | null>(null);
 
-    const openModal = (c: CategoryItem | 'new') => {
+    const [formName, setFormName] = useState('');
+    const [formDesc, setFormDesc] = useState('');
+    const [formHidden, setFormHidden] = useState(false);
+
+    useEffect(() => {
+        getCategories()
+            .then(setCategories)
+            .catch(() => showToast('error', 'Lỗi tải dữ liệu', 'Không thể tải danh sách danh mục từ máy chủ.'))
+            .finally(() => setLoading(false));
+    }, [showToast]);
+
+    const openModal = (c: Category | 'new') => {
         setEditingCategory(c);
+        if (c === 'new') {
+            setFormName('');
+            setFormDesc('');
+            setFormHidden(false);
+        } else {
+            setFormName(c.name);
+            setFormDesc(c.description ?? '');
+            setFormHidden(c.status === 'hidden');
+        }
     };
 
-    const handleSave = (e: React.FormEvent) => {
+    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        showToast('success', editingCategory === 'new' ? 'Đã thêm danh mục' : 'Đã lưu thay đổi', 'Thông tin danh mục đã được cập nhật.');
-        setEditingCategory(null);
+        if (!formName.trim() || saving) return;
+
+        const payload: CategoryPayload = {
+            name: formName.trim(),
+            description: formDesc.trim(),
+            status: formHidden ? 'hidden' : 'active',
+        };
+
+        setSaving(true);
+        try {
+            if (editingCategory === 'new') {
+                const created = await createCategory(payload);
+                setCategories(prev => [created, ...prev]);
+                showToast('success', 'Đã thêm danh mục', 'Danh mục mới đã được tạo.');
+            } else if (editingCategory) {
+                const updated = await updateCategory(editingCategory.id, payload);
+                setCategories(prev => prev.map(c => (c.id === updated.id ? updated : c)));
+                showToast('success', 'Đã lưu thay đổi', 'Thông tin danh mục đã được cập nhật.');
+            }
+            setEditingCategory(null);
+        } catch {
+            showToast('error', 'Lỗi', 'Không thể lưu danh mục. Vui lòng thử lại.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleDelete = async (c: Category) => {
+        if (!window.confirm(`Bạn có chắc chắn muốn xóa danh mục ${c.name}?`)) return;
+        try {
+            await deleteCategory(c.id);
+            setCategories(prev => prev.filter(x => x.id !== c.id));
+            showToast('success', 'Đã xóa danh mục', `${c.name} đã được xóa khỏi hệ thống.`);
+        } catch {
+            showToast('error', 'Lỗi', 'Không thể xóa danh mục. Vui lòng thử lại.');
+        }
     };
 
     const filteredCategories = useMemo(() => {
-        let rows = categories.filter((c) => {
-            const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) || c.desc.toLowerCase().includes(search.toLowerCase());
+        const rows = categories.filter((c) => {
+            const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) || (c.description ?? '').toLowerCase().includes(search.toLowerCase());
             return matchSearch;
         });
 
@@ -61,7 +105,7 @@ export function Categories() {
     const totalPages = Math.max(1, Math.ceil(totalItems / per));
     const currentRows = filteredCategories.slice((page - 1) * per, page * per);
 
-    const handleSort = (key: keyof CategoryItem) => {
+    const handleSort = (key: keyof Category) => {
         if (sortKey === key) {
             setSortDir(prev => (prev === 1 ? -1 : 1));
         } else {
@@ -70,7 +114,7 @@ export function Categories() {
         }
     };
 
-    const SortIcon = ({ columnKey }: { columnKey: keyof CategoryItem }) => {
+    const SortIcon = ({ columnKey }: { columnKey: keyof Category }) => {
         if (sortKey !== columnKey) return <ChevronsUpDown size={14} />;
         return sortDir === 1 ? <ChevronDown size={14} /> : <ChevronUp size={14} />;
     };
@@ -107,14 +151,22 @@ export function Categories() {
                         <thead>
                             <tr>
                                 <th className="sortable" onClick={() => handleSort('name')} style={{ width: '25%' }}>Tên danh mục <SortIcon columnKey="name" /></th>
-                                <th className="sortable" onClick={() => handleSort('desc')} style={{ width: '40%' }}>Mô tả <SortIcon columnKey="desc" /></th>
+                                <th className="sortable" onClick={() => handleSort('description')} style={{ width: '40%' }}>Mô tả <SortIcon columnKey="description" /></th>
                                 <th>Số sản phẩm</th>
                                 <th className="sortable" onClick={() => handleSort('status')}>Trạng thái <SortIcon columnKey="status" /></th>
                                 <th className="th-actions">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {currentRows.length === 0 ? (
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={5}>
+                                        <div className="empty-state">
+                                            <strong>Đang tải…</strong>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : currentRows.length === 0 ? (
                                 <tr>
                                     <td colSpan={5}>
                                         <div className="empty-state">
@@ -134,7 +186,7 @@ export function Categories() {
                                                 <strong>{c.name}</strong>
                                             </td>
                                             <td data-label="Mô tả" className="cell-muted" style={{ whiteSpace: 'normal', minWidth: '200px' }}>
-                                                {c.desc}
+                                                {c.description}
                                             </td>
                                             <td data-label="Số sản phẩm">
                                                 <span className="badge badge--neutral" style={{ fontWeight: 600 }}>{productCount} sản phẩm</span>
@@ -146,12 +198,7 @@ export function Categories() {
                                             </td>
                                             <td data-label="" className="td-actions">
                                                 <button className="icon-btn icon-btn--sm" title="Sửa" onClick={() => openModal(c)}><Pencil size={16} /></button>
-                                                <button className="icon-btn icon-btn--sm" title="Xóa" onClick={() => {
-                                                    if (window.confirm(`Bạn có chắc chắn muốn xóa danh mục ${c.name}?`)) {
-                                                        setCategories(categories.filter(x => x.id !== c.id));
-                                                        showToast('success', 'Đã xóa danh mục', `${c.name} đã được xóa khỏi hệ thống.`);
-                                                    }
-                                                }}><Trash2 size={16} /></button>
+                                                <button className="icon-btn icon-btn--sm" title="Xóa" onClick={() => handleDelete(c)}><Trash2 size={16} /></button>
                                             </td>
                                         </tr>
                                     );
@@ -185,21 +232,30 @@ export function Categories() {
                 footer={
                     <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', width: '100%' }}>
                         <button className="btn btn--ghost" onClick={() => setEditingCategory(null)}>Hủy bỏ</button>
-                        <button className="btn btn--primary" onClick={handleSave}>{editingCategory === 'new' ? 'Thêm' : 'Lưu thay đổi'}</button>
+                        <button className="btn btn--primary" onClick={handleSave} disabled={saving}>
+                            {saving ? 'Đang lưu…' : editingCategory === 'new' ? 'Thêm' : 'Lưu thay đổi'}
+                        </button>
                     </div>
                 }
             >
                 <form className="form" id="categoryForm" onSubmit={handleSave}>
                     <div className="field">
                         <span>Tên danh mục *</span>
-                        <input className="input" required defaultValue={editingCategory !== 'new' && editingCategory ? editingCategory.name : ''} placeholder="VD: Giày dép" />
+                        <input
+                            className="input"
+                            required
+                            value={formName}
+                            onChange={e => setFormName(e.target.value)}
+                            placeholder="VD: Giày dép"
+                        />
                     </div>
                     <div className="field">
                         <span>Mô tả</span>
                         <textarea
                             className="input"
                             rows={3}
-                            defaultValue={editingCategory !== 'new' && editingCategory ? editingCategory.desc : ''}
+                            value={formDesc}
+                            onChange={e => setFormDesc(e.target.value)}
                             placeholder="Nhập mô tả ngắn gọn cho danh mục..."
                             style={{ resize: 'vertical' }}
                         />
@@ -207,7 +263,8 @@ export function Categories() {
                     <label className="field" style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 8 }}>
                         <input
                             type="checkbox"
-                            defaultChecked={editingCategory !== 'new' && editingCategory?.status === 'hidden'}
+                            checked={formHidden}
+                            onChange={e => setFormHidden(e.target.checked)}
                             style={{ width: 15, height: 15, accentColor: 'var(--primary)' }}
                         />
                         <span style={{ fontWeight: 500, color: 'var(--text-2)' }}>Ẩn danh mục này</span>
