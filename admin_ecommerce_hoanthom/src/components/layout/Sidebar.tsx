@@ -12,7 +12,8 @@ import {
   Settings, 
   ChevronsLeft,
   ScanBarcode,
-  Tags
+  Tags,
+  Truck
 } from 'lucide-react';
 import { mockOrders } from '../../data/mock';
 
@@ -63,6 +64,9 @@ export function Sidebar({ isMobileOpen, onCloseMobile, isCollapsed, onToggleColl
           </NavLink>
           <NavLink to="/categories" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <Tags size={20} /><span className="nav-text">Danh mục</span>
+          </NavLink>
+          <NavLink to="/suppliers" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <Truck size={20} /><span className="nav-text">Nhà cung cấp</span>
           </NavLink>
           <NavLink to="/orders" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <ShoppingCart size={20} /><span className="nav-text">Đơn hàng</span>

@@ -7,6 +7,18 @@ export interface Category {
   updated_at: string;
 }
 
+export interface Supplier {
+  id: number;
+  name: string;
+  contact_name: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  note: string | null;
+  created_at: string;
+  deleted_at: string | null;
+}
+
 export interface ProductVariant {
   label: string;
   stock: number;
