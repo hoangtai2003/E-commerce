@@ -22,3 +22,17 @@ export async function apiRequest<T>(path: string, options?: RequestInit): Promis
     if (res.status === 204) return undefined as T;
     return res.json() as Promise<T>;
 }
+
+export async function apiUpload<T>(path: string, formData: FormData): Promise<T> {
+    const res = await fetch(`${API_BASE_URL}${path}`, {
+        method: 'POST',
+        body: formData,
+    });
+
+    if (!res.ok) {
+        const body = await res.text();
+        throw new ApiError(res.status, body || res.statusText);
+    }
+
+    return res.json() as Promise<T>;
+}
