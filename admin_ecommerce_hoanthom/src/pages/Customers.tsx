@@ -1,8 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Search, ChevronsUpDown, ChevronUp, ChevronDown, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
-import { mockCustomers, mockOrders, mockProducts } from '../data/mock';
+import { mockOrders, mockProducts } from '../data/mock';
 import type { Customer, Order } from '../types';
 import { Modal } from '../components/ui/Modal';
+import { getCustomers } from '../services/customers';
+import { useToast } from '../contexts/ToastContext';
 
 const TIER: Record<string, { label: string, tone: string }> = {
     vip: { label: "VIP", tone: "primary" },
@@ -35,16 +37,26 @@ const initials = (name: string) => {
 };
 
 export function Customers() {
+    const { showToast } = useToast();
     const [search, setSearch] = useState('');
     const [tier, setTier] = useState('all');
     const [sortKey, setSortKey] = useState<keyof Customer>('joined');
     const [sortDir, setSortDir] = useState<-1 | 1>(-1);
     const [page, setPage] = useState(1);
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+    const [customers, setCustomers] = useState<Customer[]>([]);
+    const [loading, setLoading] = useState(true);
     const per = 7;
 
+    useEffect(() => {
+        getCustomers()
+            .then(setCustomers)
+            .catch(() => showToast('error', 'Lỗi tải dữ liệu', 'Không thể tải danh sách khách hàng từ máy chủ.'))
+            .finally(() => setLoading(false));
+    }, [showToast]);
+
     const filteredCustomers = useMemo(() => {
-        let rows = mockCustomers.filter((c) => {
+        let rows = customers.filter((c) => {
             const q = search.toLowerCase();
             const matchSearch = c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q) || c.phone.replace(/\s/g, "").includes(q.replace(/\s/g, ""));
             const matchTier = tier === 'all' || c.tier === tier;
@@ -64,7 +76,7 @@ export function Customers() {
         });
 
         return rows;
-    }, [search, tier, sortKey, sortDir]);
+    }, [customers, search, tier, sortKey, sortDir]);
 
     const totalItems = filteredCustomers.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / per));
@@ -126,7 +138,15 @@ export function Customers() {
                             </tr>
                         </thead>
                         <tbody>
-                            {currentRows.length === 0 ? (
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={6}>
+                                        <div className="empty-state">
+                                            <strong>Đang tải…</strong>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : currentRows.length === 0 ? (
                                 <tr>
                                     <td colSpan={6}>
                                         <div className="empty-state">
