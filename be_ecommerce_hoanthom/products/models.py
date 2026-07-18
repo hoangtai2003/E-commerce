@@ -17,8 +17,6 @@ class Product(models.Model):
     )
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
-    emoji = models.CharField(max_length=16, blank=True, null=True)
-    tint = models.CharField(max_length=20, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -67,6 +65,38 @@ class ProductVariant(models.Model):
 
     def __str__(self):
         return self.sku
+
+    def soft_delete(self):
+        self.deleted_at = timezone.now()
+        self.save(update_fields=['deleted_at'])
+
+
+class ProductImageManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(deleted_at__isnull=True)
+
+
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+    variant = models.ForeignKey(
+        ProductVariant, on_delete=models.SET_NULL, related_name='images', null=True, blank=True
+    )
+    image_url = models.CharField(max_length=500)
+    thumbnail_url = models.CharField(max_length=500, blank=True, null=True)
+    alt_text = models.CharField(max_length=255, blank=True, null=True)
+    is_primary = models.BooleanField(default=False)
+    sort_order = models.IntegerField(default=0)
+    file_size = models.PositiveIntegerField(blank=True, null=True)
+    width = models.PositiveSmallIntegerField(blank=True, null=True)
+    height = models.PositiveSmallIntegerField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    objects = ProductImageManager()
+    all_objects = models.Manager()
+
+    def __str__(self):
+        return self.image_url
 
     def soft_delete(self):
         self.deleted_at = timezone.now()
