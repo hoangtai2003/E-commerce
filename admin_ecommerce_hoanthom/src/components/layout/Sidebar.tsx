@@ -1,5 +1,4 @@
 
-import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
     Sparkles,
@@ -16,7 +15,7 @@ import {
     Tags,
     Truck
 } from 'lucide-react';
-import { getOrders } from '../../services/orders';
+import { useOrders } from '../../contexts/OrdersContext';
 
 interface SidebarProps {
     isMobileOpen: boolean;
@@ -26,14 +25,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isMobileOpen, onCloseMobile, isCollapsed, onToggleCollapse }: SidebarProps) {
-    // Đếm đơn hàng đang chờ xử lý
-    const [pendingOrders, setPendingOrders] = useState(0);
-
-    useEffect(() => {
-        getOrders()
-            .then(orders => setPendingOrders(orders.filter(o => o.status === 'pending').length))
-            .catch(() => { });
-    }, []);
+    const { pendingCount } = useOrders();
 
     return (
         <>
@@ -77,7 +69,7 @@ export function Sidebar({ isMobileOpen, onCloseMobile, isCollapsed, onToggleColl
                     </NavLink>
                     <NavLink to="/orders" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                         <ShoppingCart size={20} /><span className="nav-text">Đơn hàng</span>
-                        {pendingOrders > 0 && <span className="nav-badge" id="ordersNavBadge">{pendingOrders}</span>}
+                        {pendingCount > 0 && <span className="nav-badge" id="ordersNavBadge">{pendingCount}</span>}
                     </NavLink>
                     <NavLink to="/customers" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                         <Users size={20} /><span className="nav-text">Khách hàng</span>
@@ -114,7 +106,6 @@ export function Sidebar({ isMobileOpen, onCloseMobile, isCollapsed, onToggleColl
                 </div>
             </aside>
 
-            {/* Lớp phủ khi mở drawer trên mobile */}
             {isMobileOpen && <div className="overlay" id="overlay" onClick={onCloseMobile}></div>}
         </>
     );

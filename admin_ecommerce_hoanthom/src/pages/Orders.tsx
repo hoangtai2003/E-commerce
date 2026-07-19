@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Search, ChevronsUpDown, ChevronUp, ChevronDown, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getOrders, updateOrder, type ApiOrder, type OrderStatus, type PaymentMethod } from '../services/orders';
+import { updateOrder, type ApiOrder, type OrderStatus, type PaymentMethod } from '../services/orders';
 import { getCustomers } from '../services/customers';
 import { getUsers, type ApiUser } from '../services/users';
 import type { Customer } from '../types';
 import { Modal } from '../components/ui/Modal';
 import { useToast } from '../contexts/ToastContext';
+import { useOrders } from '../contexts/OrdersContext';
 
 const ORDER_STATUS: Record<OrderStatus, { label: string, tone: string, grad: string }> = {
     pending: { label: "Chờ xử lý", tone: "warning", grad: "var(--grad-amber)" },
@@ -36,10 +37,9 @@ const initials = (name: string) => {
 
 export function Orders() {
     const { showToast } = useToast();
-    const [orders, setOrders] = useState<ApiOrder[]>([]);
+    const { orders, setOrders, loading } = useOrders();
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [staffUsers, setStaffUsers] = useState<ApiUser[]>([]);
-    const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
     const [search, setSearch] = useState('');
@@ -53,14 +53,12 @@ export function Orders() {
     const per = 7;
 
     useEffect(() => {
-        Promise.all([getOrders(), getCustomers(), getUsers()])
-            .then(([ordersData, customersData, usersData]) => {
-                setOrders(ordersData);
+        Promise.all([getCustomers(), getUsers()])
+            .then(([customersData, usersData]) => {
                 setCustomers(customersData);
                 setStaffUsers(usersData);
             })
-            .catch(() => showToast('error', 'Lỗi tải dữ liệu', 'Không thể tải danh sách đơn hàng từ máy chủ.'))
-            .finally(() => setLoading(false));
+            .catch(() => showToast('error', 'Lỗi tải dữ liệu', 'Không thể tải danh sách khách hàng/nhân viên từ máy chủ.'));
     }, [showToast]);
 
     const customerById = useMemo(() => new Map(customers.map(c => [c.id, c])), [customers]);

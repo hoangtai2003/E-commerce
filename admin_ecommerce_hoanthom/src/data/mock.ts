@@ -1,4 +1,4 @@
-import type { Product, Customer, Order, Promo, Staff, Notif, Activity, CategoryRevenue, RevenuePeriodData } from '../types';
+import type { Product, Customer, Order, Promo, Notif, Activity, CategoryRevenue, RevenuePeriodData } from '../types';
 
 export const CATEGORIES = ["Thời trang", "Công nghệ", "Phụ kiện", "Mỹ phẩm", "Gia dụng"];
 
@@ -55,28 +55,6 @@ export const mockPromos: Promo[] = [
   { id: 4, code: "NEWBIE50",   type: "fixed",   value: 50000, minOrder: 200000, used: 421, limit: 600, end: "2026-07-31", active: true,  desc: "Chào mừng khách hàng mới" },
   { id: 5, code: "TET2026",    type: "percent", value: 30, minOrder: 800000,  used: 500, limit: 500,  end: "2026-02-10", active: false, desc: "Đã kết thúc dịp Tết Nguyên đán" },
   { id: 6, code: "FLASH12H",   type: "percent", value: 25, minOrder: 300000,  used: 96,  limit: 300,  end: "2026-07-12", active: true,  desc: "Flash sale cuối tuần, số lượng có hạn" },
-];
-
-export const ROLES = {
-  admin:   { name: "Quản trị viên", icon: "Crown",       grad: "var(--grad-primary)", desc: "Toàn quyền hệ thống" },
-  manager: { name: "Quản lý",       icon: "Briefcase",   grad: "var(--grad-teal)",    desc: "Quản lý vận hành, không sửa cài đặt" },
-  staff:   { name: "Nhân viên",     icon: "User",        grad: "var(--grad-amber)",   desc: "Xử lý đơn hàng và kho" },
-};
-
-export const PERM_MODULES = ["Sản phẩm", "Đơn hàng", "Khách hàng", "Khuyến mãi"];
-export const ROLE_PERMS = {
-  admin:   { "Sản phẩm": ["view", "create", "edit", "delete"], "Đơn hàng": ["view", "create", "edit", "delete"], "Khách hàng": ["view", "create", "edit", "delete"], "Khuyến mãi": ["view", "create", "edit", "delete"] },
-  manager: { "Sản phẩm": ["view", "create", "edit"], "Đơn hàng": ["view", "edit"], "Khách hàng": ["view", "edit"], "Khuyến mãi": ["view", "create", "edit"] },
-  staff:   { "Sản phẩm": ["view"], "Đơn hàng": ["view", "edit"], "Khách hàng": ["view"], "Khuyến mãi": ["view"] },
-};
-
-export const mockStaff: Staff[] = [
-  { id: 1, name: "Minh Lê",       email: "minh.le@aurora.vn",    role: "admin",   status: "active",   lastActive: "Đang trực tuyến" },
-  { id: 2, name: "Hương Giang",   email: "giang.ng@aurora.vn",   role: "manager", status: "active",   lastActive: "15 phút trước" },
-  { id: 3, name: "Tuấn Anh",      email: "tuananh@aurora.vn",    role: "staff",   status: "active",   lastActive: "1 giờ trước" },
-  { id: 4, name: "Khánh Vy",      email: "vy.tran@aurora.vn",    role: "staff",   status: "active",   lastActive: "Hôm qua" },
-  { id: 5, name: "Đức Long",      email: "long.pham@aurora.vn",  role: "manager", status: "inactive", lastActive: "12 ngày trước" },
-  { id: 6, name: "Thảo My",       email: "my.hoang@aurora.vn",   role: "staff",   status: "inactive", lastActive: "1 tháng trước" },
 ];
 
 export const mockNotifs: Notif[] = [
