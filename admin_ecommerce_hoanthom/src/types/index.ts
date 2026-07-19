@@ -82,9 +82,10 @@ export interface Staff {
   id: number;
   name: string;
   email: string;
-  role: "admin" | "manager" | "staff";
+  phone: string | null;
+  roleId: number;
   status: "active" | "inactive";
-  lastActive: string;
+  lastActive: string | null;
 }
 
 export interface Notif {

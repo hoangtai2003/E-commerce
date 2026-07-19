@@ -1,33 +1,132 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { UserPlus, Pencil, Trash2, Crown, Briefcase, User } from 'lucide-react';
-import { mockStaff, ROLES, PERM_MODULES, ROLE_PERMS } from '../data/mock';
 import type { Staff as StaffType } from '../types';
+import { getRoles, type ApiRole } from '../services/roles';
+import { getUsers, createUser, updateUser, deleteUser, type UserPayload } from '../services/users';
 import { useToast } from '../contexts/ToastContext';
 import { Modal } from '../components/ui/Modal';
+
+const PERM_MODULES = ["Sản phẩm", "Đơn hàng", "Khách hàng", "Khuyến mãi"];
+
+const ROLE_VISUALS: Record<string, { icon: string; grad: string }> = {
+    admin: { icon: 'Crown', grad: 'var(--grad-primary)' },
+    manager: { icon: 'Briefcase', grad: 'var(--grad-teal)' },
+    staff: { icon: 'User', grad: 'var(--grad-amber)' },
+};
+const DEFAULT_ROLE_VISUAL = { icon: 'User', grad: 'var(--grad-primary)' };
+
+const iconMap: Record<string, React.ElementType> = {
+    Crown, Briefcase, User
+};
 
 const initials = (name: string) => {
     const parts = name.trim().split(/\s+/);
     return (parts.length > 1 ? parts.at(-2)![0] + parts.at(-1)![0] : parts[0].slice(0, 2)).toUpperCase();
 };
 
-const iconMap: Record<string, React.ElementType> = {
-    Crown, Briefcase, User
+const fmtLastActive = (iso: string | null) => {
+    if (!iso) return 'Chưa từng đăng nhập';
+    return new Date(iso).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 };
 
 export function Staff() {
     const { showToast } = useToast();
-    const [staffList, setStaffList] = useState<StaffType[]>(mockStaff);
+    const [roles, setRoles] = useState<ApiRole[]>([]);
+    const [staffList, setStaffList] = useState<StaffType[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+
     const [editingStaff, setEditingStaff] = useState<StaffType | 'new' | null>(null);
-    const [selectedRole, setSelectedRole] = useState<keyof typeof ROLES>('staff');
+    const [formName, setFormName] = useState('');
+    const [formEmail, setFormEmail] = useState('');
+    const [formPhone, setFormPhone] = useState('');
+    const [formRoleId, setFormRoleId] = useState<number>(0);
+    const [formStatus, setFormStatus] = useState<'active' | 'inactive'>('active');
+
+    useEffect(() => {
+        Promise.all([getRoles(), getUsers()])
+            .then(([rolesData, usersData]) => {
+                setRoles(rolesData);
+                setStaffList(usersData.map(u => ({
+                    id: u.id,
+                    name: u.full_name,
+                    email: u.email,
+                    phone: u.phone,
+                    roleId: u.role,
+                    status: u.status,
+                    lastActive: u.last_active_at,
+                })));
+            })
+            .catch(() => showToast('error', 'Lỗi tải dữ liệu', 'Không thể tải danh sách nhân viên từ máy chủ.'))
+            .finally(() => setLoading(false));
+    }, [showToast]);
+
+    const roleById = useMemo(() => new Map(roles.map(r => [r.id, r])), [roles]);
+    const selectedRole = roleById.get(formRoleId);
 
     const openModal = (s: StaffType | 'new') => {
         setEditingStaff(s);
-        setSelectedRole(s === 'new' ? 'staff' : (s.role as keyof typeof ROLES));
+        if (s === 'new') {
+            setFormName('');
+            setFormEmail('');
+            setFormPhone('');
+            setFormRoleId(roles[0]?.id ?? 0);
+            setFormStatus('active');
+        } else {
+            setFormName(s.name);
+            setFormEmail(s.email);
+            setFormPhone(s.phone ?? '');
+            setFormRoleId(s.roleId);
+            setFormStatus(s.status);
+        }
     };
 
-    const handleSave = () => {
-        showToast('success', editingStaff === 'new' ? 'Đã thêm nhân viên' : 'Đã lưu thay đổi', 'Thông tin nhân viên đã được cập nhật.');
-        setEditingStaff(null);
+    const handleSave = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!formName.trim() || !formEmail.trim() || !formRoleId || saving) return;
+
+        const payload: UserPayload = {
+            role: formRoleId,
+            full_name: formName.trim(),
+            email: formEmail.trim(),
+            phone: formPhone.trim() || null,
+            status: formStatus,
+        };
+
+        setSaving(true);
+        try {
+            if (editingStaff === 'new') {
+                const created = await createUser(payload);
+                setStaffList(prev => [{
+                    id: created.id, name: created.full_name, email: created.email, phone: created.phone,
+                    roleId: created.role, status: created.status, lastActive: created.last_active_at,
+                }, ...prev]);
+                showToast('success', 'Đã thêm nhân viên', 'Tài khoản nhân viên đã được tạo.');
+            } else if (editingStaff) {
+                const updated = await updateUser(editingStaff.id, payload);
+                setStaffList(prev => prev.map(s => s.id === updated.id ? {
+                    id: updated.id, name: updated.full_name, email: updated.email, phone: updated.phone,
+                    roleId: updated.role, status: updated.status, lastActive: updated.last_active_at,
+                } : s));
+                showToast('success', 'Đã lưu thay đổi', 'Thông tin nhân viên đã được cập nhật.');
+            }
+            setEditingStaff(null);
+        } catch {
+            showToast('error', 'Lỗi', 'Không thể lưu nhân viên. Vui lòng thử lại.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleDelete = async (s: StaffType) => {
+        if (!window.confirm(`Xóa nhân viên ${s.name}?`)) return;
+        try {
+            await deleteUser(s.id);
+            setStaffList(prev => prev.filter(x => x.id !== s.id));
+            showToast('success', 'Đã xóa nhân viên', `Tài khoản của ${s.name} đã bị gỡ bỏ.`);
+        } catch {
+            showToast('error', 'Lỗi', 'Không thể xóa nhân viên. Vui lòng thử lại.');
+        }
     };
 
     return (
@@ -38,24 +137,25 @@ export function Staff() {
                     <p className="page-sub">Quản lý tài khoản và quyền truy cập hệ thống.</p>
                 </div>
                 <div className="page-head__actions">
-                    <button className="btn btn--primary" onClick={() => openModal('new')}>
+                    <button className="btn btn--primary" onClick={() => openModal('new')} disabled={roles.length === 0}>
                         <UserPlus size={18} /> Thêm nhân viên
                     </button>
                 </div>
             </div>
 
             <div className="role-cards">
-                {Object.entries(ROLES).map(([key, r]) => {
-                    const count = staffList.filter((s) => s.role === key).length;
-                    const IconComp = iconMap[r.icon] || User;
+                {roles.map(r => {
+                    const visual = ROLE_VISUALS[r.code] ?? DEFAULT_ROLE_VISUAL;
+                    const count = staffList.filter((s) => s.roleId === r.id).length;
+                    const IconComp = iconMap[visual.icon] || User;
                     return (
-                        <article key={key} className="card role-card">
-                            <div className="role-card__icon" style={{ background: r.grad }}>
+                        <article key={r.id} className="card role-card">
+                            <div className="role-card__icon" style={{ background: visual.grad }}>
                                 <IconComp size={24} />
                             </div>
                             <div>
                                 <strong>{r.name} · {count}</strong>
-                                <p>{r.desc}</p>
+                                <p>{r.description}</p>
                             </div>
                         </article>
                     );
@@ -75,42 +175,57 @@ export function Staff() {
                             </tr>
                         </thead>
                         <tbody>
-                            {staffList.map(s => {
-                                const roleInfo = ROLES[s.role as keyof typeof ROLES] || ROLES.staff;
-                                return (
-                                    <tr key={s.id}>
-                                        <td data-label="Nhân viên">
-                                            <div className="cell-person">
-                                                <div className="avatar avatar--sm" style={{ background: roleInfo.grad }}>
-                                                    {initials(s.name)}
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={5}>
+                                        <div className="empty-state">
+                                            <strong>Đang tải…</strong>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : staffList.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5}>
+                                        <div className="empty-state">
+                                            <strong>Chưa có nhân viên</strong>
+                                            <p>Bấm "Thêm nhân viên" để tạo tài khoản đầu tiên.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : (
+                                staffList.map(s => {
+                                    const role = roleById.get(s.roleId);
+                                    const visual = role ? (ROLE_VISUALS[role.code] ?? DEFAULT_ROLE_VISUAL) : DEFAULT_ROLE_VISUAL;
+                                    return (
+                                        <tr key={s.id}>
+                                            <td data-label="Nhân viên">
+                                                <div className="cell-person">
+                                                    <div className="avatar avatar--sm" style={{ background: visual.grad }}>
+                                                        {initials(s.name)}
+                                                    </div>
+                                                    <div>
+                                                        <strong>{s.name}</strong>
+                                                        <small>{s.email}</small>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <strong>{s.name}</strong>
-                                                    <small>{s.email}</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td data-label="Vai trò">
-                                            <span className="badge badge--primary">{roleInfo.name}</span>
-                                        </td>
-                                        <td data-label="Trạng thái">
-                                            <span className={`badge badge--${s.status === "active" ? "success" : "neutral"}`}>
-                                                {s.status === "active" ? "Đang hoạt động" : "Ngưng hoạt động"}
-                                            </span>
-                                        </td>
-                                        <td data-label="Hoạt động" className="cell-muted">{s.lastActive}</td>
-                                        <td data-label="" className="td-actions">
-                                            <button className="icon-btn icon-btn--sm" title="Sửa & phân quyền" onClick={() => openModal(s)}><Pencil size={16} /></button>
-                                            <button className="icon-btn icon-btn--sm" title="Xóa" onClick={() => {
-                                                if (window.confirm(`Xóa nhân viên ${s.name}?`)) {
-                                                    setStaffList(staffList.filter(x => x.id !== s.id));
-                                                    showToast('success', 'Đã xóa nhân viên', `Tài khoản của ${s.name} đã bị gỡ bỏ.`);
-                                                }
-                                            }}><Trash2 size={16} /></button>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
+                                            </td>
+                                            <td data-label="Vai trò">
+                                                <span className="badge badge--primary">{role?.name ?? '—'}</span>
+                                            </td>
+                                            <td data-label="Trạng thái">
+                                                <span className={`badge badge--${s.status === "active" ? "success" : "neutral"}`}>
+                                                    {s.status === "active" ? "Đang hoạt động" : "Ngưng hoạt động"}
+                                                </span>
+                                            </td>
+                                            <td data-label="Hoạt động" className="cell-muted">{fmtLastActive(s.lastActive)}</td>
+                                            <td data-label="" className="td-actions">
+                                                <button className="icon-btn icon-btn--sm" title="Sửa & phân quyền" onClick={() => openModal(s)}><Pencil size={16} /></button>
+                                                <button className="icon-btn icon-btn--sm" title="Xóa" onClick={() => handleDelete(s)}><Trash2 size={16} /></button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -124,47 +239,53 @@ export function Staff() {
                 footer={
                     <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', width: '100%' }}>
                         <button className="btn btn--ghost" onClick={() => setEditingStaff(null)}>Hủy bỏ</button>
-                        <button className="btn btn--primary" onClick={handleSave}>{editingStaff === 'new' ? 'Thêm nhân viên' : 'Lưu thay đổi'}</button>
+                        <button className="btn btn--primary" onClick={handleSave} disabled={saving}>
+                            {saving ? 'Đang lưu…' : editingStaff === 'new' ? 'Thêm nhân viên' : 'Lưu thay đổi'}
+                        </button>
                     </div>
                 }
             >
-                <form className="form" onSubmit={e => { e.preventDefault(); handleSave(); }}>
+                <form className="form" onSubmit={handleSave}>
                     <div className="form-row">
                         <label className="field">
                             <span>Họ tên *</span>
-                            <input className="input" defaultValue={editingStaff !== 'new' && editingStaff ? editingStaff.name : ''} placeholder="VD: Nguyễn Văn A" />
+                            <input className="input" required value={formName} onChange={e => setFormName(e.target.value)} placeholder="VD: Nguyễn Văn A" />
                         </label>
                         <label className="field">
                             <span>Email *</span>
-                            <input className="input" type="email" defaultValue={editingStaff !== 'new' && editingStaff ? editingStaff.email : ''} placeholder="ten@aurora.vn" />
+                            <input className="input" type="email" required value={formEmail} onChange={e => setFormEmail(e.target.value)} placeholder="ten@aurora.vn" />
                         </label>
                     </div>
                     <div className="form-row">
                         <label className="field">
-                            <span>Vai trò</span>
-                            <select className="select select--full" value={selectedRole} onChange={e => setSelectedRole(e.target.value as keyof typeof ROLES)}>
-                                {Object.entries(ROLES).map(([k, r]) => (
-                                    <option key={k} value={k}>{r.name}</option>
-                                ))}
-                            </select>
+                            <span>Số điện thoại</span>
+                            <input className="input" value={formPhone} onChange={e => setFormPhone(e.target.value)} placeholder="VD: 0901234567" />
                         </label>
                         <label className="field">
+                            <span>Vai trò *</span>
+                            <select className="select select--full" value={formRoleId} onChange={e => setFormRoleId(Number(e.target.value))}>
+                                {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                            </select>
+                        </label>
+                    </div>
+                    <div className="form-row">
+                        <label className="field">
                             <span>Trạng thái</span>
-                            <select className="select select--full" defaultValue={editingStaff !== 'new' && editingStaff ? editingStaff.status : 'active'}>
+                            <select className="select select--full" value={formStatus} onChange={e => setFormStatus(e.target.value as 'active' | 'inactive')}>
                                 <option value="active">Đang hoạt động</option>
                                 <option value="inactive">Ngưng hoạt động</option>
                             </select>
                         </label>
                     </div>
                     <div className="field">
-                        <span>Quyền truy cập theo module</span>
+                        <span>Quyền truy cập theo module (theo vai trò đã chọn)</span>
                         <div className="perm-grid">
                             {PERM_MODULES.map(m => (
                                 <div key={m} className="perm-row">
                                     <span>{m}</span>
                                     <div className="perm-checks">
                                         {(['view', 'create', 'edit', 'delete'] as const).map(p => {
-                                            const hasPerm = ROLE_PERMS[selectedRole]?.[m as keyof typeof ROLE_PERMS[keyof typeof ROLE_PERMS]]?.includes(p);
+                                            const hasPerm = selectedRole?.permissions?.[m]?.includes(p);
                                             const label = { view: 'Xem', create: 'Tạo', edit: 'Sửa', delete: 'Xóa' }[p];
                                             return (
                                                 <label key={p}>
