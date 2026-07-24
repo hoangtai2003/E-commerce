@@ -3,6 +3,7 @@ import { PackagePlus, Search, History } from 'lucide-react';
 import { getCategories } from '../services/categories';
 import { getProducts, type ApiProduct } from '../services/products';
 import { getProductVariants, type ApiProductVariant } from '../services/productVariants';
+import { getProductImages, type ApiProductImage } from '../services/productImages';
 import { getSuppliers } from '../services/suppliers';
 import type { Supplier } from '../types';
 import { getUsers, type ApiUser } from '../services/users';
@@ -42,6 +43,7 @@ interface VariantRow {
     stock: number;
     lowStockThreshold: number;
     status: string;
+    thumbnailUrl: string | null;
 }
 
 export function Inventory() {
@@ -52,6 +54,7 @@ export function Inventory() {
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [apiProducts, setApiProducts] = useState<ApiProduct[]>([]);
     const [apiVariants, setApiVariants] = useState<ApiProductVariant[]>([]);
+    const [apiImages, setApiImages] = useState<ApiProductImage[]>([]);
     const [movements, setMovements] = useState<ApiInventoryMovement[]>([]);
     const [users, setUsers] = useState<ApiUser[]>([]);
     const [loading, setLoading] = useState(true);
@@ -67,12 +70,13 @@ export function Inventory() {
     const [saving, setSaving] = useState(false);
 
     const loadAll = () => {
-        return Promise.all([getCategories(), getSuppliers(), getProducts(), getProductVariants(), getInventoryMovements(), getUsers()])
-            .then(([cats, sups, prods, variants, moves, usersData]) => {
+        return Promise.all([getCategories(), getSuppliers(), getProducts(), getProductVariants(), getProductImages(), getInventoryMovements(), getUsers()])
+            .then(([cats, sups, prods, variants, images, moves, usersData]) => {
                 setCategories(cats);
                 setSuppliers(sups);
                 setApiProducts(prods);
                 setApiVariants(variants);
+                setApiImages(images);
                 setMovements(moves);
                 setUsers(usersData);
             });
@@ -93,6 +97,8 @@ export function Inventory() {
     const rows: VariantRow[] = useMemo(() => {
         return apiVariants.map(v => {
             const product = productById.get(v.product);
+            const productImages = apiImages.filter(img => img.product === v.product);
+            const thumb = productImages.find(img => img.is_primary) ?? productImages[0];
             return {
                 id: v.id,
                 productName: product?.name ?? '—',
@@ -103,9 +109,10 @@ export function Inventory() {
                 stock: v.stock,
                 lowStockThreshold: v.low_stock_threshold,
                 status: v.variant_status,
+                thumbnailUrl: thumb ? (thumb.thumbnail_url ?? thumb.image_url) : null,
             };
         });
-    }, [apiVariants, productById, categoryNameById, supplierNameById]);
+    }, [apiVariants, productById, categoryNameById, supplierNameById, apiImages]);
 
     const filteredRows = useMemo(() => {
         const q = search.toLowerCase();
@@ -204,6 +211,7 @@ export function Inventory() {
                     <table className="table">
                         <thead>
                             <tr>
+                                <th>Ảnh</th>
                                 <th>Sản phẩm</th>
                                 <th>Danh mục</th>
                                 <th>Nhà cung cấp</th>
@@ -217,7 +225,7 @@ export function Inventory() {
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan={8}>
+                                    <td colSpan={9}>
                                         <div className="empty-state">
                                             <strong>Đang tải…</strong>
                                         </div>
@@ -225,7 +233,7 @@ export function Inventory() {
                                 </tr>
                             ) : filteredRows.length === 0 ? (
                                 <tr>
-                                    <td colSpan={8}>
+                                    <td colSpan={9}>
                                         <div className="empty-state">
                                             <strong>Không tìm thấy biến thể nào</strong>
                                             <p>Thử đổi từ khoá hoặc bộ lọc.</p>
@@ -237,6 +245,13 @@ export function Inventory() {
                                     const s = VARIANT_STATUS[r.status] ?? VARIANT_STATUS.active;
                                     return (
                                         <tr key={r.id}>
+                                            <td data-label="Ảnh">
+                                                <div style={{ width: 40, height: 40, borderRadius: 8, background: '#e5e7eb', overflow: 'hidden', display: 'grid', placeItems: 'center' }}>
+                                                    {r.thumbnailUrl ? (
+                                                        <img src={r.thumbnailUrl} alt={r.productName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    ) : '📦'}
+                                                </div>
+                                            </td>
                                             <td data-label="Sản phẩm">
                                                 <strong>{r.productName}</strong>
                                                 <small style={{ display: 'block', color: 'var(--text-3)' }}>{r.variantName}</small>
