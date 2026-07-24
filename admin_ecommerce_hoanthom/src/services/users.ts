@@ -18,6 +18,7 @@ export type UserPayload = {
     email: string;
     phone?: string | null;
     status?: 'active' | 'inactive';
+    password?: string;
 };
 
 export function getUsers() {

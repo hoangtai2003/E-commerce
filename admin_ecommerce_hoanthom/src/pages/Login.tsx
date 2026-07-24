@@ -1,16 +1,29 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Command } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 
 export function Login() {
     const navigate = useNavigate();
+    const { login } = useAuth();
+    const { showToast } = useToast();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [submitting, setSubmitting] = useState(false);
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Giả lập Đăng nhập thành công, chuyển hướng vào Dashboard
-        navigate('/');
+        if (submitting) return;
+        setSubmitting(true);
+        try {
+            await login(email, password);
+            navigate('/');
+        } catch {
+            showToast('error', 'Đăng nhập thất bại', 'Email hoặc mật khẩu không đúng.');
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     return (
@@ -52,8 +65,8 @@ export function Login() {
                         </label>
                         <a href="#" className="link-btn" onClick={e => e.preventDefault()}>Quên mật khẩu?</a>
                     </div>
-                    <button type="submit" className="btn btn--primary" style={{ width: '100%', justifyContent: 'center', marginTop: '10px' }}>
-                        Đăng nhập
+                    <button type="submit" className="btn btn--primary" style={{ width: '100%', justifyContent: 'center', marginTop: '10px' }} disabled={submitting}>
+                        {submitting ? 'Đang đăng nhập…' : 'Đăng nhập'}
                     </button>
                 </form>
             </div>

@@ -16,6 +16,12 @@ import {
     Truck
 } from 'lucide-react';
 import { useOrders } from '../../contexts/OrdersContext';
+import { useAuth } from '../../contexts/AuthContext';
+
+const initials = (name: string) => {
+    const parts = name.trim().split(/\s+/);
+    return (parts.length > 1 ? parts.at(-2)![0] + parts.at(-1)![0] : parts[0].slice(0, 2)).toUpperCase();
+};
 
 interface SidebarProps {
     isMobileOpen: boolean;
@@ -26,6 +32,7 @@ interface SidebarProps {
 
 export function Sidebar({ isMobileOpen, onCloseMobile, isCollapsed, onToggleCollapse }: SidebarProps) {
     const { pendingCount } = useOrders();
+    const { user } = useAuth();
 
     return (
         <>
@@ -89,10 +96,10 @@ export function Sidebar({ isMobileOpen, onCloseMobile, isCollapsed, onToggleColl
 
                 <div className="sidebar__footer">
                     <div className="sidebar__user">
-                        <div className="avatar avatar--sm">ML</div>
+                        <div className="avatar avatar--sm">{user ? initials(user.full_name) : '?'}</div>
                         <div className="sidebar__user-info nav-text">
-                            <strong>Minh Lê</strong>
-                            <span>Quản trị viên</span>
+                            <strong>{user?.full_name ?? 'Đang tải…'}</strong>
+                            <span>{user?.email ?? ''}</span>
                         </div>
                     </div>
                     <button

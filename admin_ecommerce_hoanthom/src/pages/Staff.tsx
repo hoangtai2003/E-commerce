@@ -42,6 +42,7 @@ export function Staff() {
     const [formPhone, setFormPhone] = useState('');
     const [formRoleId, setFormRoleId] = useState<number>(0);
     const [formStatus, setFormStatus] = useState<'active' | 'inactive'>('active');
+    const [formPassword, setFormPassword] = useState('');
 
     useEffect(() => {
         Promise.all([getRoles(), getUsers()])
@@ -72,18 +73,23 @@ export function Staff() {
             setFormPhone('');
             setFormRoleId(roles[0]?.id ?? 0);
             setFormStatus('active');
+            setFormPassword('');
         } else {
             setFormName(s.name);
             setFormEmail(s.email);
             setFormPhone(s.phone ?? '');
             setFormRoleId(s.roleId);
             setFormStatus(s.status);
+            setFormPassword('');
         }
     };
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formName.trim() || !formEmail.trim() || !formRoleId || saving) return;
+        const passwordValid = editingStaff === 'new'
+            ? formPassword.trim().length >= 8
+            : (!formPassword.trim() || formPassword.trim().length >= 8);
+        if (!formName.trim() || !formEmail.trim() || !formRoleId || saving || !passwordValid) return;
 
         const payload: UserPayload = {
             role: formRoleId,
@@ -91,6 +97,7 @@ export function Staff() {
             email: formEmail.trim(),
             phone: formPhone.trim() || null,
             status: formStatus,
+            ...(formPassword.trim() ? { password: formPassword.trim() } : {}),
         };
 
         setSaving(true);
@@ -269,6 +276,18 @@ export function Staff() {
                         </label>
                     </div>
                     <div className="form-row">
+                        <label className="field">
+                            <span>{editingStaff === 'new' ? 'Mật khẩu *' : 'Mật khẩu mới'}</span>
+                            <input
+                                className="input"
+                                type="password"
+                                required={editingStaff === 'new'}
+                                minLength={8}
+                                value={formPassword}
+                                onChange={e => setFormPassword(e.target.value)}
+                                placeholder={editingStaff === 'new' ? 'Tối thiểu 8 ký tự' : 'Để trống nếu không đổi mật khẩu'}
+                            />
+                        </label>
                         <label className="field">
                             <span>Trạng thái</span>
                             <select className="select select--full" value={formStatus} onChange={e => setFormStatus(e.target.value as 'active' | 'inactive')}>

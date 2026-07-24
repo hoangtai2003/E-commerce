@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import type { ReactNode, Dispatch, SetStateAction } from 'react';
 import { getOrders } from '../services/orders';
 import type { ApiOrder } from '../services/orders';
+import { useAuth } from './AuthContext';
 
 interface OrdersContextType {
     orders: ApiOrder[];
@@ -22,6 +23,7 @@ export function useOrders() {
 }
 
 export function OrdersProvider({ children }: { children: ReactNode }) {
+    const { user, loading: authLoading } = useAuth();
     const [orders, setOrders] = useState<ApiOrder[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -35,8 +37,13 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
     }, []);
 
     useEffect(() => {
-        refreshOrders();
-    }, [refreshOrders]);
+        if (authLoading) return;
+        if (user) {
+            refreshOrders();
+        } else {
+            setLoading(false);
+        }
+    }, [user, authLoading, refreshOrders]);
 
     const pendingCount = orders.filter(o => o.status === 'pending').length;
 

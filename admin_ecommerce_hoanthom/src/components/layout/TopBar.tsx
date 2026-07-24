@@ -2,6 +2,12 @@ import { useState, useRef, useEffect } from 'react';
 import { Menu, Search, Moon, Sun, Bell, ChevronDown, User, Settings, LogOut } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { mockNotifs } from '../../data/mock';
+import { useAuth } from '../../contexts/AuthContext';
+
+const initials = (name: string) => {
+    const parts = name.trim().split(/\s+/);
+    return (parts.length > 1 ? parts.at(-2)![0] + parts.at(-1)![0] : parts[0].slice(0, 2)).toUpperCase();
+};
 
 interface TopBarProps {
     onOpenMobile: () => void;
@@ -10,6 +16,7 @@ interface TopBarProps {
 }
 
 export function TopBar({ onOpenMobile, isDarkMode, onToggleTheme }: TopBarProps) {
+    const { user, logout } = useAuth();
     const [isNotifOpen, setIsNotifOpen] = useState(false);
     const [isUserOpen, setIsUserOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -18,6 +25,12 @@ export function TopBar({ onOpenMobile, isDarkMode, onToggleTheme }: TopBarProps)
     const notifRef = useRef<HTMLDivElement>(null);
     const userRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
+
+    const handleLogout = async () => {
+        setIsUserOpen(false);
+        await logout();
+        navigate('/login');
+    };
 
     const unreadCount = notifs.filter(n => n.unread).length;
 
@@ -112,8 +125,8 @@ export function TopBar({ onOpenMobile, isDarkMode, onToggleTheme }: TopBarProps)
 
                 <div className={`dropdown ${isUserOpen ? 'open' : ''}`} ref={userRef}>
                     <button className="user-chip" onClick={() => setIsUserOpen(!isUserOpen)} aria-haspopup="menu">
-                        <div className="avatar">ML</div>
-                        <span className="user-chip__name">Minh Lê</span>
+                        <div className="avatar">{user ? initials(user.full_name) : '?'}</div>
+                        <span className="user-chip__name">{user?.full_name ?? 'Đang tải…'}</span>
                         <ChevronDown size={16} />
                     </button>
                     <div className="dropdown__panel" role="menu">
@@ -124,7 +137,7 @@ export function TopBar({ onOpenMobile, isDarkMode, onToggleTheme }: TopBarProps)
                             <Settings size={16} /> Cài đặt
                         </Link>
                         <hr />
-                        <button className="dropdown__item dropdown__item--danger" onClick={() => { setIsUserOpen(false); navigate('/login'); }} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', font: 'inherit' }}>
+                        <button className="dropdown__item dropdown__item--danger" onClick={handleLogout} style={{ width: '100%', textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', font: 'inherit' }}>
                             <LogOut size={16} /> Đăng xuất
                         </button>
                     </div>

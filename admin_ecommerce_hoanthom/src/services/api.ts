@@ -8,11 +8,46 @@ export class ApiError extends Error {
     }
 }
 
+let refreshPromise: Promise<boolean> | null = null;
+
+function refreshAccessToken(): Promise<boolean> {
+    if (!refreshPromise) {
+        refreshPromise = fetch(`${API_BASE_URL}/auth/refresh/`, {
+            method: 'POST',
+            credentials: 'include',
+        })
+            .then(res => res.ok)
+            .catch(() => false)
+            .finally(() => {
+                refreshPromise = null;
+            });
+    }
+    return refreshPromise;
+}
+
+async function fetchWithAuthRetry(url: string, options: RequestInit, isAuthEndpoint: boolean): Promise<Response> {
+    let res = await fetch(url, { credentials: 'include', ...options });
+
+    if (res.status === 401 && !isAuthEndpoint) {
+        const refreshed = await refreshAccessToken();
+        if (refreshed) {
+            res = await fetch(url, { credentials: 'include', ...options });
+        }
+        if (res.status === 401) {
+            window.dispatchEvent(new CustomEvent('auth:expired'));
+        }
+    }
+
+    return res;
+}
+
+const NO_RETRY_PATHS = ['/auth/login/', '/auth/refresh/', '/auth/logout/'];
+
 export async function apiRequest<T>(path: string, options?: RequestInit): Promise<T> {
-    const res = await fetch(`${API_BASE_URL}${path}`, {
+    const res = await fetchWithAuthRetry(`${API_BASE_URL}${path}`, {
         headers: { 'Content-Type': 'application/json' },
         ...options,
-    });
+    }, NO_RETRY_PATHS.includes(path));
 
     if (!res.ok) {
         const body = await res.text();
@@ -24,10 +59,10 @@ export async function apiRequest<T>(path: string, options?: RequestInit): Promis
 }
 
 export async function apiUpload<T>(path: string, formData: FormData): Promise<T> {
-    const res = await fetch(`${API_BASE_URL}${path}`, {
+    const res = await fetchWithAuthRetry(`${API_BASE_URL}${path}`, {
         method: 'POST',
         body: formData,
-    });
+    }, false);
 
     if (!res.ok) {
         const body = await res.text();
