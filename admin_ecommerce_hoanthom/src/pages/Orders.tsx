@@ -50,7 +50,7 @@ export function Orders() {
     const [page, setPage] = useState(1);
     const [selectedOrder, setSelectedOrder] = useState<ApiOrder | null>(null);
     const [editingStatus, setEditingStatus] = useState<OrderStatus>('pending');
-    const per = 7;
+    const per = 10;
 
     useEffect(() => {
         Promise.all([getCustomers(), getUsers()])

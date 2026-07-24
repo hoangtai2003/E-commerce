@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Plus, Search, ChevronsUpDown, ChevronUp, ChevronDown, Pencil, Trash2, ChevronLeft, ChevronRight, X, Star } from 'lucide-react';
-import type { Product, Category } from '../types';
+import type { Product, Category, Supplier } from '../types';
 import { getCategories } from '../services/categories';
+import { getSuppliers } from '../services/suppliers';
 import { getProducts, createProduct, updateProduct, deleteProduct, type ApiProduct, type ProductPayload } from '../services/products';
 import {
     getProductVariants,
@@ -45,9 +46,10 @@ export function Products() {
     const [sortKey, setSortKey] = useState<keyof Product>('sold');
     const [sortDir, setSortDir] = useState<-1 | 1>(-1);
     const [page, setPage] = useState(1);
-    const per = 6;
+    const per = 10;
 
     const [categories, setCategories] = useState<Category[]>([]);
+    const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [apiProducts, setApiProducts] = useState<ApiProduct[]>([]);
     const [apiVariants, setApiVariants] = useState<ApiProductVariant[]>([]);
     const [apiImages, setApiImages] = useState<ApiProductImage[]>([]);
@@ -58,6 +60,7 @@ export function Products() {
     const [editingVariants, setEditingVariants] = useState<VariantRow[]>([]);
     const [deletedVariantIds, setDeletedVariantIds] = useState<number[]>([]);
     const [formCategoryId, setFormCategoryId] = useState<number>(0);
+    const [formSupplierId, setFormSupplierId] = useState<number>(0);
     const [formName, setFormName] = useState('');
     const [formHidden, setFormHidden] = useState(false);
 
@@ -67,9 +70,10 @@ export function Products() {
     const [primaryImageKey, setPrimaryImageKey] = useState<string | null>(null);
 
     useEffect(() => {
-        Promise.all([getCategories(), getProducts(), getProductVariants(), getProductImages()])
-            .then(([cats, prods, variants, images]) => {
+        Promise.all([getCategories(), getSuppliers(), getProducts(), getProductVariants(), getProductImages()])
+            .then(([cats, sups, prods, variants, images]) => {
                 setCategories(cats);
+                setSuppliers(sups);
                 setApiProducts(prods);
                 setApiVariants(variants);
                 setApiImages(images);
@@ -115,6 +119,7 @@ export function Products() {
         setPendingImages([]);
         if (p === 'new') {
             setFormCategoryId(categories[0]?.id ?? 0);
+            setFormSupplierId(0);
             setFormName('');
             setFormHidden(false);
             setEditingVariants([{ sku: '', label: '', price: '', stock: 0 }]);
@@ -124,6 +129,7 @@ export function Products() {
             const apiProduct = apiProducts.find(ap => ap.id === p.id);
             if (!apiProduct) return;
             setFormCategoryId(apiProduct.category);
+            setFormSupplierId(apiProduct.default_supplier ?? 0);
             setFormName(apiProduct.name);
             setFormHidden(!apiProduct.is_active);
             const rows = apiVariants
@@ -175,6 +181,7 @@ export function Products() {
 
         const payload: ProductPayload = {
             category: formCategoryId,
+            default_supplier: formSupplierId || null,
             name: formName.trim(),
             is_active: !formHidden,
         };
@@ -356,6 +363,7 @@ export function Products() {
                             <tr>
                                 <th className="sortable" onClick={() => handleSort('name')}>Sản phẩm <SortIcon columnKey="name" /></th>
                                 <th>Danh mục</th>
+                                <th>Nhà cung cấp</th>
                                 <th className="sortable" onClick={() => handleSort('price')}>Giá <SortIcon columnKey="price" /></th>
                                 <th className="sortable" onClick={() => handleSort('stock')}>Tồn kho <SortIcon columnKey="stock" /></th>
                                 <th className="sortable" onClick={() => handleSort('sold')}>Đã bán <SortIcon columnKey="sold" /></th>
@@ -366,7 +374,7 @@ export function Products() {
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan={7}>
+                                    <td colSpan={8}>
                                         <div className="empty-state">
                                             <strong>Đang tải…</strong>
                                         </div>
@@ -374,7 +382,7 @@ export function Products() {
                                 </tr>
                             ) : currentRows.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7}>
+                                    <td colSpan={8}>
                                         <div className="empty-state">
                                             <strong>Không tìm thấy sản phẩm</strong>
                                             <p>Thử đổi từ khoá hoặc xoá bớt bộ lọc để xem thêm kết quả.</p>
@@ -388,6 +396,10 @@ export function Products() {
                                     const stockColor = p.stock === 0 ? "var(--danger)" : p.stock <= 15 ? "var(--warning)" : "var(--success)";
                                     const productImages = apiImages.filter(img => img.product === p.id);
                                     const thumb = productImages.find(img => img.is_primary) ?? productImages[0];
+                                    const apiProduct = apiProducts.find(ap => ap.id === p.id);
+                                    const supplierName = apiProduct?.default_supplier
+                                        ? (suppliers.find(s => s.id === apiProduct.default_supplier)?.name ?? '—')
+                                        : null;
                                     return (
                                         <tr key={p.id}>
                                             <td data-label="Sản phẩm">
@@ -404,6 +416,7 @@ export function Products() {
                                                 </div>
                                             </td>
                                             <td data-label="Danh mục"><span className="badge badge--primary">{p.category}</span></td>
+                                            <td data-label="Nhà cung cấp" className="cell-muted">{supplierName ?? '— Chưa xác định —'}</td>
                                             <td data-label="Giá" className="cell-money">{fmtMoney(p.price)}</td>
                                             <td data-label="Tồn kho" className="stock-cell">
                                                 <span style={{ fontWeight: 600 }}>{p.stock}</span>
@@ -465,6 +478,15 @@ export function Products() {
                             <span>Danh mục *</span>
                             <select className="select select--full" value={formCategoryId} onChange={e => setFormCategoryId(Number(e.target.value))}>
                                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </select>
+                        </label>
+                    </div>
+                    <div className="form-row">
+                        <label className="field">
+                            <span>Nhà cung cấp</span>
+                            <select className="select select--full" value={formSupplierId} onChange={e => setFormSupplierId(Number(e.target.value))}>
+                                <option value={0}>— Chưa xác định —</option>
+                                {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                             </select>
                         </label>
                     </div>

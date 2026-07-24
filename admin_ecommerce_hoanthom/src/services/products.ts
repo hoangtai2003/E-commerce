@@ -14,6 +14,7 @@ export type ApiProduct = {
 
 export type ProductPayload = {
     category: number;
+    default_supplier?: number | null;
     name: string;
     description?: string | null;
     is_active: boolean;

@@ -3,6 +3,8 @@ import { PackagePlus, Search, History } from 'lucide-react';
 import { getCategories } from '../services/categories';
 import { getProducts, type ApiProduct } from '../services/products';
 import { getProductVariants, type ApiProductVariant } from '../services/productVariants';
+import { getSuppliers } from '../services/suppliers';
+import type { Supplier } from '../types';
 import { getUsers, type ApiUser } from '../services/users';
 import {
     getInventoryMovements,
@@ -34,6 +36,7 @@ interface VariantRow {
     id: number;
     productName: string;
     categoryName: string;
+    supplierName: string | null;
     variantName: string;
     sku: string;
     stock: number;
@@ -46,6 +49,7 @@ export function Inventory() {
     const { showToast } = useToast();
 
     const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
+    const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [apiProducts, setApiProducts] = useState<ApiProduct[]>([]);
     const [apiVariants, setApiVariants] = useState<ApiProductVariant[]>([]);
     const [movements, setMovements] = useState<ApiInventoryMovement[]>([]);
@@ -63,9 +67,10 @@ export function Inventory() {
     const [saving, setSaving] = useState(false);
 
     const loadAll = () => {
-        return Promise.all([getCategories(), getProducts(), getProductVariants(), getInventoryMovements(), getUsers()])
-            .then(([cats, prods, variants, moves, usersData]) => {
+        return Promise.all([getCategories(), getSuppliers(), getProducts(), getProductVariants(), getInventoryMovements(), getUsers()])
+            .then(([cats, sups, prods, variants, moves, usersData]) => {
                 setCategories(cats);
+                setSuppliers(sups);
                 setApiProducts(prods);
                 setApiVariants(variants);
                 setMovements(moves);
@@ -82,6 +87,7 @@ export function Inventory() {
 
     const productById = useMemo(() => new Map(apiProducts.map(p => [p.id, p])), [apiProducts]);
     const categoryNameById = useMemo(() => new Map(categories.map(c => [c.id, c.name])), [categories]);
+    const supplierNameById = useMemo(() => new Map(suppliers.map(s => [s.id, s.name])), [suppliers]);
     const userById = useMemo(() => new Map(users.map(u => [u.id, u])), [users]);
 
     const rows: VariantRow[] = useMemo(() => {
@@ -91,6 +97,7 @@ export function Inventory() {
                 id: v.id,
                 productName: product?.name ?? '—',
                 categoryName: product ? (categoryNameById.get(product.category) ?? '—') : '—',
+                supplierName: product?.default_supplier ? (supplierNameById.get(product.default_supplier) ?? null) : null,
                 variantName: variantLabel(v),
                 sku: v.sku,
                 stock: v.stock,
@@ -98,7 +105,7 @@ export function Inventory() {
                 status: v.variant_status,
             };
         });
-    }, [apiVariants, productById, categoryNameById]);
+    }, [apiVariants, productById, categoryNameById, supplierNameById]);
 
     const filteredRows = useMemo(() => {
         const q = search.toLowerCase();
@@ -199,6 +206,7 @@ export function Inventory() {
                             <tr>
                                 <th>Sản phẩm</th>
                                 <th>Danh mục</th>
+                                <th>Nhà cung cấp</th>
                                 <th>SKU</th>
                                 <th>Tồn kho</th>
                                 <th>Ngưỡng cảnh báo</th>
@@ -209,7 +217,7 @@ export function Inventory() {
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan={7}>
+                                    <td colSpan={8}>
                                         <div className="empty-state">
                                             <strong>Đang tải…</strong>
                                         </div>
@@ -217,7 +225,7 @@ export function Inventory() {
                                 </tr>
                             ) : filteredRows.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7}>
+                                    <td colSpan={8}>
                                         <div className="empty-state">
                                             <strong>Không tìm thấy biến thể nào</strong>
                                             <p>Thử đổi từ khoá hoặc bộ lọc.</p>
@@ -234,6 +242,7 @@ export function Inventory() {
                                                 <small style={{ display: 'block', color: 'var(--text-3)' }}>{r.variantName}</small>
                                             </td>
                                             <td data-label="Danh mục"><span className="badge badge--primary">{r.categoryName}</span></td>
+                                            <td data-label="Nhà cung cấp" className="cell-muted">{r.supplierName ?? '— Chưa xác định —'}</td>
                                             <td data-label="SKU" className="cell-muted">{r.sku}</td>
                                             <td data-label="Tồn kho" style={{ fontWeight: 600 }}>{r.stock}</td>
                                             <td data-label="Ngưỡng cảnh báo" className="cell-muted">{r.lowStockThreshold}</td>
@@ -333,9 +342,10 @@ export function Inventory() {
                         >
                             {apiVariants.map(v => {
                                 const product = productById.get(v.product);
+                                const supplierName = product?.default_supplier ? supplierNameById.get(product.default_supplier) : null;
                                 return (
                                     <option key={v.id} value={v.id}>
-                                        {product?.name ?? '—'} — {variantLabel(v)} ({v.sku}) · Tồn: {v.stock}
+                                        {product?.name ?? '—'} — {variantLabel(v)} ({v.sku}) · Tồn: {v.stock}{supplierName ? ` · NCC: ${supplierName}` : ''}
                                     </option>
                                 );
                             })}
