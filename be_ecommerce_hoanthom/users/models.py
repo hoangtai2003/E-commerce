@@ -37,6 +37,8 @@ class User(models.Model):
     objects = UserManager()
     all_objects = models.Manager()
 
+    is_authenticated = True
+
     def __str__(self):
         return self.full_name
 

@@ -203,21 +203,20 @@ Không có template/view HTML nào trong dự án này (API-only) nên không c�
 
 ## 8. Bảo mật — bắt buộc tuân thủ
 
-> Có 2 vấn đề **đang tồn tại thật trong dự án**, cần xử lý trước khi lên môi trường dùng chung — không phải lý thuyết chung chung:
-
-- ⚠️ **`backend/settings.py` chưa cấu hình `REST_FRAMEWORK`** → mặc định DRF cho phép **mọi request không cần đăng nhập** (`AllowAny` ngầm định). Trước khi có traffic thật, cần thêm tối thiểu:
+- **Xác thực dùng JWT lưu trong HttpOnly cookie**, tự viết bằng `PyJWT` (không dùng `djangorestframework-simplejwt` — model `users.User` không phải `AUTH_USER_MODEL`/`AbstractBaseUser` nên simplejwt không khớp; xem `users/services.py` + `users/authentication.py`). `backend/settings.py` đã cấu hình:
   ```python
   REST_FRAMEWORK = {
+      'DEFAULT_AUTHENTICATION_CLASSES': ['users.authentication.CookieJWTAuthentication'],
       'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.IsAuthenticated'],
-      'DEFAULT_AUTHENTICATION_CLASSES': ['rest_framework.authentication.SessionAuthentication'],
   }
   ```
-  và mở quyền `AllowAny` có chủ đích cho từng endpoint public cụ thể (nếu có), không để mặc định toàn cục.
-- ⚠️ **`SECRET_KEY` đang hardcode thẳng trong `settings.py`** (`django-insecure-...`, giá trị mặc định lúc `startproject`). Phải chuyển vào `.env` giống cách `DB_*` đang làm (`python-dotenv` đã có sẵn trong dự án):
-  ```python
-  SECRET_KEY = os.environ.get('SECRET_KEY')
-  ```
-- `CORS_ALLOW_ALL_ORIGINS = True` hiện tại **chỉ chấp nhận được cho dev local** — trước khi deploy, đổi sang `CORS_ALLOWED_ORIGINS` liệt kê domain FE cụ thể.
+  Mọi endpoint mặc định yêu cầu đăng nhập; chỉ `LoginView`/`RefreshView`/`LogoutView` (`users/views.py`) khai báo `permission_classes = [AllowAny]`, `authentication_classes = []` để mở public có chủ đích. `CookieJWTAuthentication` **phải** override `authenticate_header()` (trả `'Bearer'`) — nếu bỏ qua, DRF sẽ tự hạ mọi lỗi xác thực xuống 403 thay vì 401, khiến FE không phân biệt được "cần refresh token" với "không đủ quyền" (lỗi thực tế đã gặp khi build tính năng này).
+  - Endpoint: `POST /api/auth/login/`, `POST /api/auth/logout/`, `POST /api/auth/refresh/`, `GET /api/auth/me/`.
+  - Access token 15 phút, refresh token 7 ngày (`JWT_ACCESS_TOKEN_LIFETIME`/`JWT_REFRESH_TOKEN_LIFETIME` trong settings). Cookie access `path='/'`, refresh scoped `path='/api/auth/refresh/'`.
+  - Mật khẩu hash bằng `django.contrib.auth.hashers.make_password`/`check_password` (không cần `AUTH_USER_MODEL`), lưu vào `User.password_hash` qua `users/services.py::set_user_password()` — không bao giờ nhận `password_hash` thô từ client (xem `UserSerializer.create/update`).
+- ✅ **`SECRET_KEY` đã chuyển vào `.env`** (`SECRET_KEY = os.environ.get('SECRET_KEY')`), cùng `JWT_SECRET_KEY` riêng để ký JWT — theo cách `DB_*` đã làm (`python-dotenv`).
+- ✅ **`CORS_ALLOWED_ORIGINS`** đã liệt kê cụ thể (`http://localhost:5173`, `http://127.0.0.1:5173`) + `CORS_ALLOW_CREDENTIALS = True` — bắt buộc phải làm cùng lúc với cookie auth vì trình duyệt từ chối cookie kèm request khi origin là wildcard `*`. Khi deploy, cập nhật danh sách này thành domain FE thật.
+- ⚠️ **Frontend và backend dev server phải cùng hostname** (`localhost` hoặc `127.0.0.1`, không trộn lẫn) — nếu không, cookie `SameSite=Lax` bị trình duyệt coi là cross-site và không gửi kèm ổn định sau khi reload trang (lỗi thực tế đã gặp). Xem `admin_ecommerce_hoanthom/.env` (`VITE_API_BASE_URL`) phải khớp hostname với nơi chạy `npm run dev`.
 - Không bao giờ commit `.env`/secret thật vào git (đã có `.env` trong `.gitignore` ở root — giữ nguyên).
 - Tránh N+1 query — xem mục 9.
 - Validate input ở serializer (dùng field type đúng: `EmailField` cho email, `SlugField` cho slug...) thay vì `CharField` chung chung khi có ý nghĩa rõ ràng, để DRF tự validate format.
@@ -292,7 +291,8 @@ ruff format .
 ## Nợ kỹ thuật đã biết (cập nhật khi xử lý xong)
 
 - [ ] Chưa cài `pytest-django`, `factory_boy`, `faker`, `ruff` — mục 6/7/10 mới là quy ước mục tiêu, chưa phải hiện trạng.
-- [ ] `REST_FRAMEWORK` chưa cấu hình permission/authentication (mục 8).
-- [ ] `SECRET_KEY` hardcode trong `settings.py` (mục 8).
-- [ ] `requirements.txt` hiện không phản ánh đúng dependency thật của dự án (là `pip freeze` từ máy khác) — cần chạy `pip freeze > requirements.txt` từ đúng venv của dự án.
+- [x] `REST_FRAMEWORK` đã cấu hình `CookieJWTAuthentication` + `IsAuthenticated` toàn cục (mục 8).
+- [x] `SECRET_KEY`/`JWT_SECRET_KEY` đã chuyển vào `.env` (mục 8).
+- [ ] `requirements.txt` hiện không phản ánh đúng dependency thật của dự án (là `pip freeze` từ máy khác, và giờ còn thiếu `pyjwt` mới cài) — cần chạy `pip freeze > requirements.txt` từ đúng venv của dự án.
 - [ ] `categories`/`customers` đang trùng lặp logic soft-delete — cân nhắc rút thành base model khi có app thứ 3 (mục 3).
+- [ ] `JWT_COOKIE_SECURE=False` đang hardcode cho dev (http) — bắt buộc đổi `True` khi deploy lên môi trường có HTTPS thật, nếu không cookie vẫn được set nhưng không có bảo vệ `Secure`.
