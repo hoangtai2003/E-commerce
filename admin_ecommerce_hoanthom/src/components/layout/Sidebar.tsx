@@ -13,7 +13,8 @@ import {
     ChevronsLeft,
     ScanBarcode,
     Tags,
-    Truck
+    Truck,
+    Warehouse
 } from 'lucide-react';
 import { useOrders } from '../../contexts/OrdersContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -67,6 +68,9 @@ export function Sidebar({ isMobileOpen, onCloseMobile, isCollapsed, onToggleColl
                     <p className="nav-label">Vận hành</p>
                     <NavLink to="/products" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                         <Package size={20} /><span className="nav-text">Sản phẩm</span>
+                    </NavLink>
+                    <NavLink to="/inventory" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                        <Warehouse size={20} /><span className="nav-text">Kho hàng</span>
                     </NavLink>
                     <NavLink to="/categories" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                         <Tags size={20} /><span className="nav-text">Danh mục</span>

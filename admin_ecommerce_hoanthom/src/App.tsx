@@ -11,6 +11,7 @@ import { Staff } from './pages/Staff';
 import { Login } from './pages/Login';
 import { Categories } from './pages/Categories';
 import { Suppliers } from './pages/Suppliers';
+import { Inventory } from './pages/Inventory';
 import { POS } from './pages/POS';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
@@ -31,6 +32,7 @@ function App() {
                                 <Route path="products" element={<Products />} />
                                 <Route path="categories" element={<Categories />} />
                                 <Route path="suppliers" element={<Suppliers />} />
+                                <Route path="inventory" element={<Inventory />} />
                                 <Route path="orders" element={<Orders />} />
                                 <Route path="customers" element={<Customers />} />
                                 <Route path="promos" element={<Promos />} />

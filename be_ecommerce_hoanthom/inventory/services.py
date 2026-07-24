@@ -24,6 +24,14 @@ def record_movement(*, variant_id, movement_type, quantity, ref_type=None, ref_i
         )
 
         variant.stock = new_stock
-        variant.save(update_fields=['stock'])
+        update_fields = ['stock']
+
+        if variant.variant_status != 'hidden':
+            new_status = 'out' if new_stock <= 0 else 'low' if new_stock <= variant.low_stock_threshold else 'active'
+            if new_status != variant.variant_status:
+                variant.variant_status = new_status
+                update_fields.append('variant_status')
+
+        variant.save(update_fields=update_fields)
 
     return movement
