@@ -10,6 +10,7 @@ class InventoryMovement(models.Model):
         ('purchase', 'Purchase'),
         ('return', 'Return'),
         ('adjustment', 'Adjustment'),
+        ('supplier_return', 'Supplier Return'),
     )
 
     variant = models.ForeignKey(ProductVariant, on_delete=models.PROTECT, related_name='inventory_movements')

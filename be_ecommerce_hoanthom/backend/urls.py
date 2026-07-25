@@ -30,6 +30,7 @@ urlpatterns = [
     path('api/', include('promotions.urls')),
     path('api/', include('orders.urls')),
     path('api/', include('returns.urls')),
+    path('api/', include('supplier_returns.urls')),
 ]
 
 if settings.DEBUG:
