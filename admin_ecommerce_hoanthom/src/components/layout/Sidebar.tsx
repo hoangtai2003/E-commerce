@@ -14,7 +14,9 @@ import {
     ScanBarcode,
     Tags,
     Truck,
-    Warehouse
+    Warehouse,
+    Undo2,
+    PackageMinus
 } from 'lucide-react';
 import { useOrders } from '../../contexts/OrdersContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -81,6 +83,12 @@ export function Sidebar({ isMobileOpen, onCloseMobile, isCollapsed, onToggleColl
                     <NavLink to="/orders" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                         <ShoppingCart size={20} /><span className="nav-text">Đơn hàng</span>
                         {pendingCount > 0 && <span className="nav-badge" id="ordersNavBadge">{pendingCount}</span>}
+                    </NavLink>
+                    <NavLink to="/returns" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                        <Undo2 size={20} /><span className="nav-text">Trả hàng (khách)</span>
+                    </NavLink>
+                    <NavLink to="/supplier-returns" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                        <PackageMinus size={20} /><span className="nav-text">Trả hàng NCC</span>
                     </NavLink>
                     <NavLink to="/customers" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                         <Users size={20} /><span className="nav-text">Khách hàng</span>

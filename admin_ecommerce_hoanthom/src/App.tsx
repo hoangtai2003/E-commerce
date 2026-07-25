@@ -5,6 +5,8 @@ import { Dashboard } from './pages/Dashboard';
 import { Products } from './pages/Products';
 import { Settings } from './pages/Settings';
 import { Orders } from './pages/Orders';
+import { Returns } from './pages/Returns';
+import { SupplierReturns } from './pages/SupplierReturns';
 import { Customers } from './pages/Customers';
 import { Promos } from './pages/Promos';
 import { Staff } from './pages/Staff';
@@ -34,6 +36,8 @@ function App() {
                                 <Route path="suppliers" element={<Suppliers />} />
                                 <Route path="inventory" element={<Inventory />} />
                                 <Route path="orders" element={<Orders />} />
+                                <Route path="returns" element={<Returns />} />
+                                <Route path="supplier-returns" element={<SupplierReturns />} />
                                 <Route path="customers" element={<Customers />} />
                                 <Route path="promos" element={<Promos />} />
                                 <Route path="staff" element={<Staff />} />
