@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { PackagePlus, Search, History } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { PackagePlus, ClipboardEdit, Search, History } from 'lucide-react';
 import { getCategories } from '../services/categories';
 import { getProducts, type ApiProduct } from '../services/products';
 import { getProductVariants, type ApiProductVariant } from '../services/productVariants';
@@ -49,6 +50,7 @@ interface VariantRow {
 export function Inventory() {
     const { user } = useAuth();
     const { showToast } = useToast();
+    const navigate = useNavigate();
 
     const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -64,7 +66,7 @@ export function Inventory() {
 
     const [restockVariant, setRestockVariant] = useState<VariantRow | 'pick' | null>(null);
     const [formVariantId, setFormVariantId] = useState<number>(0);
-    const [formType, setFormType] = useState<MovementType>('purchase');
+    const [formType, setFormType] = useState<MovementType>('adjustment');
     const [formQuantity, setFormQuantity] = useState('');
     const [formNote, setFormNote] = useState('');
     const [saving, setSaving] = useState(false);
@@ -136,7 +138,7 @@ export function Inventory() {
     const openRestockModal = (row: VariantRow | 'pick') => {
         setRestockVariant(row);
         setFormVariantId(row === 'pick' ? (apiVariants[0]?.id ?? 0) : row.id);
-        setFormType('purchase');
+        setFormType('adjustment');
         setFormQuantity('');
         setFormNote('');
     };
@@ -147,17 +149,13 @@ export function Inventory() {
         e.preventDefault();
         const qty = Number(formQuantity);
         if (!formVariantId || !qty || saving) return;
-        if (formType === 'purchase' && qty <= 0) {
-            showToast('error', 'Lỗi', 'Số lượng nhập hàng phải lớn hơn 0.');
-            return;
-        }
 
         setSaving(true);
         try {
             await createInventoryMovement({
                 variant: formVariantId,
                 movement_type: formType,
-                quantity: formType === 'purchase' ? Math.abs(qty) : qty,
+                quantity: qty,
                 note: formNote.trim() || null,
                 staff: user?.id ?? null,
             });
@@ -176,11 +174,14 @@ export function Inventory() {
             <div className="page-head">
                 <div>
                     <h1>Kho hàng</h1>
-                    <p className="page-sub">Theo dõi tồn kho theo biến thể và ghi nhận nhập hàng khi hết.</p>
+                    <p className="page-sub">Theo dõi tồn kho theo biến thể. Nhập hàng qua phiếu nhập kèm hóa đơn nhà cung cấp.</p>
                 </div>
                 <div className="page-head__actions">
-                    <button className="btn btn--primary" onClick={() => openRestockModal('pick')} disabled={apiVariants.length === 0}>
-                        <PackagePlus size={18} /> Ghi nhận nhập kho
+                    <button className="btn btn--ghost" onClick={() => openRestockModal('pick')} disabled={apiVariants.length === 0}>
+                        <ClipboardEdit size={18} /> Ghi nhận điều chỉnh kho
+                    </button>
+                    <button className="btn btn--primary" onClick={() => navigate('/purchases')} disabled={suppliers.length === 0}>
+                        <PackagePlus size={18} /> Tạo phiếu nhập hàng
                     </button>
                 </div>
             </div>
@@ -263,7 +264,7 @@ export function Inventory() {
                                             <td data-label="Ngưỡng cảnh báo" className="cell-muted">{r.lowStockThreshold}</td>
                                             <td data-label="Trạng thái"><span className={`badge badge--${s.tone}`}>{s.label}</span></td>
                                             <td data-label="" className="td-actions">
-                                                <button className="btn btn--sm btn--ghost" onClick={() => openRestockModal(r)}>
+                                                <button className="btn btn--sm btn--ghost" onClick={() => navigate('/purchases', { state: { presetVariantId: r.id } })}>
                                                     <PackagePlus size={14} /> Nhập hàng
                                                 </button>
                                             </td>
@@ -336,7 +337,7 @@ export function Inventory() {
             <Modal
                 isOpen={restockVariant !== null}
                 onClose={closeRestockModal}
-                title="Ghi nhận thay đổi kho"
+                title="Ghi nhận điều chỉnh kho"
                 footer={
                     <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', width: '100%' }}>
                         <button className="btn btn--ghost" onClick={closeRestockModal}>Hủy bỏ</button>
@@ -370,7 +371,6 @@ export function Inventory() {
                         <label className="field">
                             <span>Loại *</span>
                             <select className="select select--full" value={formType} onChange={e => setFormType(e.target.value as MovementType)}>
-                                <option value="purchase">Nhập hàng</option>
                                 <option value="adjustment">Điều chỉnh kho (kiểm kê)</option>
                                 <option value="return">Trả hàng (khách trả lại)</option>
                             </select>
@@ -389,7 +389,7 @@ export function Inventory() {
                     </div>
                     <label className="field">
                         <span>Ghi chú</span>
-                        <input className="input" value={formNote} onChange={e => setFormNote(e.target.value)} placeholder="VD: Nhập từ nhà cung cấp X" />
+                        <input className="input" value={formNote} onChange={e => setFormNote(e.target.value)} placeholder="VD: Kiểm kê phát hiện thiếu, khách trả hàng…" />
                     </label>
                 </form>
             </Modal>

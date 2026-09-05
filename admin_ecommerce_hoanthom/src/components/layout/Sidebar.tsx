@@ -16,7 +16,8 @@ import {
     Truck,
     Warehouse,
     Undo2,
-    PackageMinus
+    PackageMinus,
+    PackagePlus
 } from 'lucide-react';
 import { useOrders } from '../../contexts/OrdersContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -73,6 +74,9 @@ export function Sidebar({ isMobileOpen, onCloseMobile, isCollapsed, onToggleColl
                     </NavLink>
                     <NavLink to="/inventory" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                         <Warehouse size={20} /><span className="nav-text">Kho hàng</span>
+                    </NavLink>
+                    <NavLink to="/purchases" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                        <PackagePlus size={20} /><span className="nav-text">Nhập hàng</span>
                     </NavLink>
                     <NavLink to="/categories" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                         <Tags size={20} /><span className="nav-text">Danh mục</span>

@@ -14,6 +14,7 @@ import { Login } from './pages/Login';
 import { Categories } from './pages/Categories';
 import { Suppliers } from './pages/Suppliers';
 import { Inventory } from './pages/Inventory';
+import { PurchaseInvoices } from './pages/PurchaseInvoices';
 import { POS } from './pages/POS';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
@@ -35,6 +36,7 @@ function App() {
                                 <Route path="categories" element={<Categories />} />
                                 <Route path="suppliers" element={<Suppliers />} />
                                 <Route path="inventory" element={<Inventory />} />
+                                <Route path="purchases" element={<PurchaseInvoices />} />
                                 <Route path="orders" element={<Orders />} />
                                 <Route path="returns" element={<Returns />} />
                                 <Route path="supplier-returns" element={<SupplierReturns />} />
