@@ -177,7 +177,11 @@ export function Products() {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formName.trim() || !formCategoryId || saving) return;
+        if (saving) return;
+        if (!formName.trim() || !formCategoryId) {
+            showToast('error', 'Thiếu thông tin', 'Vui lòng nhập Tên sản phẩm và chọn Danh mục trước khi lưu.');
+            return;
+        }
 
         const payload: ProductPayload = {
             category: formCategoryId,
@@ -471,11 +475,11 @@ export function Products() {
                 <form className="form" onSubmit={handleSave}>
                     <div className="form-row">
                         <label className="field">
-                            <span>Tên sản phẩm *</span>
+                            <span>Tên sản phẩm <em className="required-mark">*</em></span>
                             <input className="input" required value={formName} onChange={e => setFormName(e.target.value)} placeholder="VD: Áo hoodie oversize" />
                         </label>
                         <label className="field">
-                            <span>Danh mục *</span>
+                            <span>Danh mục <em className="required-mark">*</em></span>
                             <select className="select select--full" value={formCategoryId} onChange={e => setFormCategoryId(Number(e.target.value))}>
                                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                             </select>

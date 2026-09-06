@@ -53,7 +53,11 @@ export function Suppliers() {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formName.trim() || saving) return;
+        if (saving) return;
+        if (!formName.trim()) {
+            showToast('error', 'Thiếu thông tin', 'Vui lòng nhập Tên nhà cung cấp trước khi lưu.');
+            return;
+        }
 
         const payload: SupplierPayload = {
             name: formName.trim(),
@@ -248,7 +252,7 @@ export function Suppliers() {
             >
                 <form className="form" id="supplierForm" onSubmit={handleSave}>
                     <div className="field">
-                        <span>Tên nhà cung cấp *</span>
+                        <span>Tên nhà cung cấp <em className="required-mark">*</em></span>
                         <input
                             className="input"
                             required

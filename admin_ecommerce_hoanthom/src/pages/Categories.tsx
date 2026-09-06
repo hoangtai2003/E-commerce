@@ -45,7 +45,11 @@ export function Categories() {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formName.trim() || saving) return;
+        if (saving) return;
+        if (!formName.trim()) {
+            showToast('error', 'Thiếu thông tin', 'Vui lòng nhập Tên danh mục trước khi lưu.');
+            return;
+        }
 
         const payload: CategoryPayload = {
             name: formName.trim(),
@@ -240,7 +244,7 @@ export function Categories() {
             >
                 <form className="form" id="categoryForm" onSubmit={handleSave}>
                     <div className="field">
-                        <span>Tên danh mục *</span>
+                        <span>Tên danh mục <em className="required-mark">*</em></span>
                         <input
                             className="input"
                             required

@@ -147,8 +147,12 @@ export function Inventory() {
 
     const handleSubmitMovement = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (saving) return;
         const qty = Number(formQuantity);
-        if (!formVariantId || !qty || saving) return;
+        if (!formVariantId || !qty) {
+            showToast('error', 'Thiếu thông tin', 'Vui lòng chọn sản phẩm/biến thể và nhập Số lượng trước khi xác nhận.');
+            return;
+        }
 
         setSaving(true);
         try {
@@ -349,7 +353,7 @@ export function Inventory() {
             >
                 <form className="form" onSubmit={handleSubmitMovement}>
                     <label className="field">
-                        <span>Sản phẩm / biến thể *</span>
+                        <span>Sản phẩm / biến thể <em className="required-mark">*</em></span>
                         <select
                             className="select select--full"
                             value={formVariantId}
@@ -369,14 +373,14 @@ export function Inventory() {
                     </label>
                     <div className="form-row">
                         <label className="field">
-                            <span>Loại *</span>
+                            <span>Loại <em className="required-mark">*</em></span>
                             <select className="select select--full" value={formType} onChange={e => setFormType(e.target.value as MovementType)}>
                                 <option value="adjustment">Điều chỉnh kho (kiểm kê)</option>
                                 <option value="return">Trả hàng (khách trả lại)</option>
                             </select>
                         </label>
                         <label className="field">
-                            <span>{formType === 'adjustment' ? 'Số lượng thay đổi (+/-) *' : 'Số lượng *'}</span>
+                            <span>{formType === 'adjustment' ? 'Số lượng thay đổi (+/-)' : 'Số lượng'} <em className="required-mark">*</em></span>
                             <input
                                 className="input"
                                 type="number"

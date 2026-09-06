@@ -50,8 +50,7 @@ export function Sidebar({ isMobileOpen, onCloseMobile, isCollapsed, onToggleColl
                         <Sparkles size={20} />
                     </div>
                     <div className="brand-text">
-                        <span className="brand-name">Aurora</span>
-                        <span className="brand-sub">E-commerce Admin</span>
+                        <span className="brand-name">Hoan Thơm</span>
                     </div>
                     <button className="icon-btn sidebar__close" onClick={onCloseMobile} aria-label="Đóng menu">
                         <X size={20} />

@@ -440,7 +440,7 @@ export function SupplierReturns() {
             >
                 <form className="form" onSubmit={handleCreateSupplierReturn}>
                     <label className="field">
-                        <span>Nhà cung cấp *</span>
+                        <span>Nhà cung cấp <em className="required-mark">*</em></span>
                         <select className="select select--full" value={formSupplierId} onChange={e => setFormSupplierId(Number(e.target.value))}>
                             {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                         </select>

@@ -420,7 +420,7 @@ export function Returns() {
                 <form className="form" onSubmit={handleCreateReturn}>
                     <div className="dropdown" style={{ width: '100%' }}>
                         <label className="field">
-                            <span>Đơn hàng gốc *</span>
+                            <span>Đơn hàng gốc <em className="required-mark">*</em></span>
                             <div className="search search--full">
                                 <Search size={18} />
                                 <input

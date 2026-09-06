@@ -86,10 +86,20 @@ export function Staff() {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (saving) return;
+
         const passwordValid = editingStaff === 'new'
             ? formPassword.trim().length >= 8
             : (!formPassword.trim() || formPassword.trim().length >= 8);
-        if (!formName.trim() || !formEmail.trim() || !formRoleId || saving || !passwordValid) return;
+
+        if (!formName.trim() || !formEmail.trim() || !formRoleId) {
+            showToast('error', 'Thiếu thông tin', 'Vui lòng nhập Họ tên, Email và chọn Vai trò trước khi lưu.');
+            return;
+        }
+        if (!passwordValid) {
+            showToast('error', 'Mật khẩu không hợp lệ', 'Mật khẩu phải có ít nhất 8 ký tự.');
+            return;
+        }
 
         const payload: UserPayload = {
             role: formRoleId,
@@ -255,11 +265,11 @@ export function Staff() {
                 <form className="form" onSubmit={handleSave}>
                     <div className="form-row">
                         <label className="field">
-                            <span>Họ tên *</span>
+                            <span>Họ tên <em className="required-mark">*</em></span>
                             <input className="input" required value={formName} onChange={e => setFormName(e.target.value)} placeholder="VD: Nguyễn Văn A" />
                         </label>
                         <label className="field">
-                            <span>Email *</span>
+                            <span>Email <em className="required-mark">*</em></span>
                             <input className="input" type="email" required value={formEmail} onChange={e => setFormEmail(e.target.value)} placeholder="ten@aurora.vn" />
                         </label>
                     </div>
@@ -269,7 +279,7 @@ export function Staff() {
                             <input className="input" value={formPhone} onChange={e => setFormPhone(e.target.value)} placeholder="VD: 0901234567" />
                         </label>
                         <label className="field">
-                            <span>Vai trò *</span>
+                            <span>Vai trò <em className="required-mark">*</em></span>
                             <select className="select select--full" value={formRoleId} onChange={e => setFormRoleId(Number(e.target.value))}>
                                 {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                             </select>
@@ -277,7 +287,7 @@ export function Staff() {
                     </div>
                     <div className="form-row">
                         <label className="field">
-                            <span>{editingStaff === 'new' ? 'Mật khẩu *' : 'Mật khẩu mới'}</span>
+                            <span>{editingStaff === 'new' ? <>Mật khẩu <em className="required-mark">*</em></> : 'Mật khẩu mới'}</span>
                             <input
                                 className="input"
                                 type="password"

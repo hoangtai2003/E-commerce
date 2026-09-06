@@ -407,7 +407,7 @@ export function PurchaseInvoices() {
                 <form className="form" onSubmit={handleCreateInvoice}>
                     <div className="form-row">
                         <label className="field">
-                            <span>Nhà cung cấp *</span>
+                            <span>Nhà cung cấp <em className="required-mark">*</em></span>
                             <select className="select select--full" value={formSupplierId} onChange={e => setFormSupplierId(Number(e.target.value))}>
                                 {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                             </select>

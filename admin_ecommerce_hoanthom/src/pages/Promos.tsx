@@ -60,7 +60,11 @@ export function Promos() {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formCode.trim() || !formValue || !formEnd || saving || !editingPromo) return;
+        if (saving || !editingPromo) return;
+        if (!formCode.trim() || !formValue || !formEnd) {
+            showToast('error', 'Thiếu thông tin', 'Vui lòng nhập Mã code, Giá trị giảm và Ngày hết hạn trước khi lưu.');
+            return;
+        }
 
         const payload: PromotionPayload = {
             code: formCode.trim().toUpperCase(),
@@ -218,7 +222,7 @@ export function Promos() {
                 <form className="form" onSubmit={handleSave}>
                     <div className="form-row">
                         <label className="field">
-                            <span>Mã code *</span>
+                            <span>Mã code <em className="required-mark">*</em></span>
                             <input
                                 className="input"
                                 style={{ textTransform: 'uppercase' }}
@@ -238,7 +242,7 @@ export function Promos() {
                     </div>
                     <div className="form-row">
                         <label className="field">
-                            <span>Giá trị giảm * {formType === 'percent' && '(1-100)'}</span>
+                            <span>Giá trị giảm <em className="required-mark">*</em> {formType === 'percent' && '(1-100)'}</span>
                             <input
                                 className="input"
                                 type="number"
@@ -261,7 +265,7 @@ export function Promos() {
                             <input className="input" type="number" min={0} value={formLimit} onChange={e => setFormLimit(e.target.value)} placeholder="VD: 500 (để trống = không giới hạn)" />
                         </label>
                         <label className="field">
-                            <span>Ngày hết hạn *</span>
+                            <span>Ngày hết hạn <em className="required-mark">*</em></span>
                             <input className="input" type="date" required value={formEnd} onChange={e => setFormEnd(e.target.value)} />
                         </label>
                     </div>
