@@ -2,7 +2,21 @@
 set -e
 
 echo "Waiting for MySQL at $DB_HOST:$DB_PORT..."
-until mysqladmin ping -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASSWORD" --silent; do
+until python -c "
+import os, sys
+import MySQLdb
+try:
+    MySQLdb.connect(
+        host=os.environ['DB_HOST'],
+        port=int(os.environ['DB_PORT']),
+        user=os.environ['DB_USER'],
+        passwd=os.environ['DB_PASSWORD'],
+        db=os.environ['DB_NAME'],
+    )
+except Exception as e:
+    print(e)
+    sys.exit(1)
+"; do
   sleep 2
 done
 echo "MySQL is up."
