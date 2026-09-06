@@ -1,0 +1,47 @@
+services:
+  db:
+    image: mariadb:10.11
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build: ./be_ecommerce_hoanthom
+    restart: unless-stopped
+    env_file:
+      - ./be_ecommerce_hoanthom/.env
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./admin_ecommerce_hoanthom
+      args:
+        VITE_API_BASE_URL: /api
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - static_volume:/usr/share/nginx/static:ro
+      - media_volume:/usr/share/nginx/media:ro
+    depends_on:
+      - backend
+
+volumes:
+  db_data:
+  static_volume:
+  media_volume:
