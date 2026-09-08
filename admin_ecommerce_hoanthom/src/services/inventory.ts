@@ -1,6 +1,6 @@
 import { apiRequest } from './api';
 
-export type MovementType = 'sale' | 'purchase' | 'return' | 'adjustment';
+export type MovementType = 'sale' | 'purchase' | 'return' | 'adjustment' | 'supplier_return';
 
 export type ApiInventoryMovement = {
     id: number;
