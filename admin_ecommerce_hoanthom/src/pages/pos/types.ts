@@ -23,6 +23,7 @@ export interface PosVariant {
     label: string;
     price: number;
     stock: number;
+    sku: string;
 }
 
 export interface PosProduct {

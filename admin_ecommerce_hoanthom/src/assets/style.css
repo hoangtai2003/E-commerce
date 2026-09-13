@@ -1691,3 +1691,39 @@ hr { border: none; border-top: 1px solid var(--border); margin: 6px 0; }
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------- 15. IN MÃ VẠCH ---------- */
+.barcode-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+.barcode-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-align: center;
+  break-inside: avoid;
+}
+.barcode-label__name { font-size: 12px; line-height: 1.25; }
+.barcode-label__variant { font-size: 11px; color: var(--text-3); }
+.barcode-label__price { font-size: 13px; font-weight: 700; color: var(--primary); }
+
+/* Chỉ in vùng .barcode-print-area, ẩn toàn bộ phần còn lại của trang (sidebar, topbar, modal chrome...) */
+@media print {
+  body * { visibility: hidden; }
+  .barcode-print-area, .barcode-print-area * { visibility: visible; }
+  .barcode-print-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    margin: 0;
+  }
+  .barcode-label { border-color: #999; }
+}

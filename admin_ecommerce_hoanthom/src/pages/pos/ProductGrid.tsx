@@ -1,11 +1,12 @@
 import type { RefObject } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Camera } from 'lucide-react';
 import { fmtMoney, type PosProduct } from './types';
 
 interface ProductGridProps {
     searchInputRef: RefObject<HTMLInputElement | null>;
     search: string;
     onSearchChange: (value: string) => void;
+    onOpenCameraScanner: () => void;
     category: string;
     onCategoryChange: (value: string) => void;
     categories: { id: number; name: string }[];
@@ -15,7 +16,7 @@ interface ProductGridProps {
 }
 
 export function ProductGrid({
-    searchInputRef, search, onSearchChange, category, onCategoryChange,
+    searchInputRef, search, onSearchChange, onOpenCameraScanner, category, onCategoryChange,
     categories, loading, filteredProducts, onProductClick,
 }: ProductGridProps) {
     return (
@@ -31,6 +32,9 @@ export function ProductGrid({
                         onChange={e => onSearchChange(e.target.value)}
                     />
                 </div>
+                <button className="btn btn--ghost" onClick={onOpenCameraScanner} title="Quét mã bằng camera">
+                    <Camera size={18} /> Quét camera
+                </button>
                 <div className="pos-categories">
                     <button
                         className={`badge ${category === 'all' ? 'badge--primary active' : 'badge--neutral'}`}

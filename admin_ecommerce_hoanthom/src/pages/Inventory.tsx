@@ -30,6 +30,7 @@ const MOVEMENT_TYPE_LABELS: Record<MovementType, string> = {
     adjustment: 'Điều chỉnh',
     return: 'Trả hàng',
     sale: 'Bán hàng',
+    supplier_return: 'Trả hàng NCC',
 };
 
 const variantLabel = (v: ApiProductVariant) => v.variant_name || [v.size, v.color].filter(Boolean).join(' / ') || v.sku;

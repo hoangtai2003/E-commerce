@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Plus, Search, ChevronsUpDown, ChevronUp, ChevronDown, Pencil, Trash2, ChevronLeft, ChevronRight, X, Star } from 'lucide-react';
+import { Plus, Search, ChevronsUpDown, ChevronUp, ChevronDown, Pencil, Trash2, ChevronLeft, ChevronRight, X, Star, Barcode as BarcodeIcon } from 'lucide-react';
+import { PrintBarcodesModal } from './products/PrintBarcodesModal';
 import type { Product, Category, Supplier } from '../types';
 import { getCategories } from '../services/categories';
 import { getSuppliers } from '../services/suppliers';
@@ -55,6 +56,7 @@ export function Products() {
     const [apiImages, setApiImages] = useState<ApiProductImage[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [isPrintBarcodesOpen, setIsPrintBarcodesOpen] = useState(false);
 
     const [editingProduct, setEditingProduct] = useState<Product | 'new' | null>(null);
     const [editingVariants, setEditingVariants] = useState<VariantRow[]>([]);
@@ -329,6 +331,9 @@ export function Products() {
                     <p className="page-sub">Quản lý kho hàng, danh mục và biến thể.</p>
                 </div>
                 <div className="page-head__actions">
+                    <button className="btn btn--ghost" onClick={() => setIsPrintBarcodesOpen(true)} disabled={apiVariants.length === 0}>
+                        <BarcodeIcon size={18} /> In mã vạch
+                    </button>
                     <button className="btn btn--primary" onClick={() => openModal('new')} disabled={categories.length === 0}>
                         <Plus size={18} /> Thêm sản phẩm
                     </button>
@@ -618,6 +623,13 @@ export function Products() {
                     </label>
                 </form>
             </Modal>
+
+            <PrintBarcodesModal
+                isOpen={isPrintBarcodesOpen}
+                onClose={() => setIsPrintBarcodesOpen(false)}
+                apiProducts={apiProducts}
+                apiVariants={apiVariants}
+            />
         </section>
     );
 }

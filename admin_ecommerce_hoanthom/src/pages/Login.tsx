@@ -34,7 +34,7 @@ export function Login() {
                         <Command size={24} />
                     </div>
                     <h2>Chào mừng trở lại</h2>
-                    <p className="page-sub">Đăng nhập vào Aurora Admin để quản lý</p>
+                    <p className="page-sub">Đăng nhập vào hệ thống quản lý</p>
                 </div>
                 <form className="form" onSubmit={handleLogin}>
                     <label className="field">

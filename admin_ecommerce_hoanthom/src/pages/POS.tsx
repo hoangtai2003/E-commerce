@@ -19,6 +19,7 @@ import { VariantModal } from './pos/VariantModal';
 import { CancelConfirmModal } from './pos/CancelConfirmModal';
 import { SuccessModal } from './pos/SuccessModal';
 import { HeldOrdersModal } from './pos/HeldOrdersModal';
+import { CameraScannerModal } from '../components/ui/CameraScannerModal';
 
 export function POS() {
     const { showToast } = useToast();
@@ -54,6 +55,7 @@ export function POS() {
     const [lastOrder, setLastOrder] = useState<LastOrderSummary | null>(null);
     const [isHeldListOpen, setIsHeldListOpen] = useState(false);
     const [isCancelConfirmOpen, setIsCancelConfirmOpen] = useState(false);
+    const [isCameraScannerOpen, setIsCameraScannerOpen] = useState(false);
 
     const loadCatalog = () => {
         return Promise.all([getProducts(), getProductVariants(), getProductImages()]).then(([prods, variants, images]) => {
@@ -87,7 +89,7 @@ export function POS() {
         return apiProducts.map(p => {
             const variants = apiVariants
                 .filter(v => v.product === p.id)
-                .map(v => ({ id: v.id, label: variantLabel(v), price: v.price, stock: v.stock }));
+                .map(v => ({ id: v.id, label: variantLabel(v), price: v.price, stock: v.stock, sku: v.sku }));
             const productImages = apiImages.filter(img => img.product === p.id);
             const thumb = productImages.find(img => img.is_primary) ?? productImages[0];
             return {
@@ -115,12 +117,18 @@ export function POS() {
                 if (cart.length > 0) {
                     handleCheckout();
                 }
+            } else if (e.key === "Enter") {
+                // Máy quét mã vạch gõ toàn bộ SKU rồi gửi phím Enter — khớp đúng 1 biến thể thì
+                // thêm luôn vào giỏ, không khớp thì bỏ qua (ô tìm kiếm vẫn lọc theo từ khoá như cũ).
+                if (!search.trim()) return;
+                const matched = handleScannedCode(search);
+                if (matched) e.preventDefault();
             }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [cart, customer, promo, payment, cashGivenStr]);
+    }, [cart, customer, promo, payment, cashGivenStr, search, products]);
 
     // Derived state
     const filteredProducts = useMemo(() => {
@@ -163,6 +171,7 @@ export function POS() {
             setCart(cart.map(item =>
                 item === existing ? { ...item, qty: item.qty + 1 } : item
             ));
+            searchInputRef.current?.focus();
         } else {
             if (variant.stock < 1) {
                 showToast("warning", "Hết hàng", "Sản phẩm đã hết hàng.");
@@ -178,12 +187,30 @@ export function POS() {
                 maxStock: variant.stock,
                 thumbnailUrl: product.thumbnailUrl,
             }]);
+            searchInputRef.current?.focus();
         }
     };
 
     const handleProductClick = (p: PosProduct) => {
         if (p.variants.length === 1) addToCart(p, p.variants[0]);
         else if (p.variants.length > 1) setVariantProduct(p);
+    };
+
+    // Dùng chung cho cả 2 nguồn quét mã: máy quét vật lý (gõ vào ô tìm kiếm + Enter) và
+    // camera trên trình duyệt (CameraScannerModal). Trả về true nếu khớp được biến thể nào đó.
+    const handleScannedCode = (rawCode: string): boolean => {
+        const code = rawCode.trim().toLowerCase();
+        if (!code) return false;
+        for (const p of products) {
+            const variant = p.variants.find(v => v.sku.toLowerCase() === code);
+            if (variant) {
+                addToCart(p, variant);
+                setSearch("");
+                showToast("success", "Đã quét", `${p.name}${variant.label ? ' - ' + variant.label : ''}`);
+                return true;
+            }
+        }
+        return false;
     };
 
     const handleSelectVariant = (product: PosProduct, variant: PosVariant) => {
@@ -368,6 +395,7 @@ export function POS() {
                     searchInputRef={searchInputRef}
                     search={search}
                     onSearchChange={setSearch}
+                    onOpenCameraScanner={() => setIsCameraScannerOpen(true)}
                     category={category}
                     onCategoryChange={setCategory}
                     categories={categories}
@@ -438,6 +466,12 @@ export function POS() {
                 heldOrders={heldOrders}
                 onRemove={idx => setHeldOrders(heldOrders.filter((_, i) => i !== idx))}
                 onRestore={restoreHoldOrder}
+            />
+
+            <CameraScannerModal
+                isOpen={isCameraScannerOpen}
+                onClose={() => setIsCameraScannerOpen(false)}
+                onDetected={handleScannedCode}
             />
         </section>
     );
