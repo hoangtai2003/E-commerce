@@ -33,11 +33,16 @@ services:
       args:
         VITE_API_BASE_URL: /api
     restart: unless-stopped
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS}
     ports:
       - "80:80"
+      - "443:443"
     volumes:
-      - static_volume:/usr/share/nginx/static:ro
-      - media_volume:/usr/share/nginx/media:ro
+      - static_volume:/srv/static:ro
+      - media_volume:/srv/media:ro
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
       - backend
 
@@ -45,3 +50,5 @@ volumes:
   db_data:
   static_volume:
   media_volume:
+  caddy_data:
+  caddy_config:
