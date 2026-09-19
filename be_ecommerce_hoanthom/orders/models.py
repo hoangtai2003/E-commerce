@@ -21,8 +21,6 @@ class Order(models.Model):
     PAYMENT_METHOD_CHOICES = (
         ('cod', 'COD'),
         ('transfer', 'Transfer'),
-        ('card', 'Card'),
-        ('momo', 'Momo'),
         ('cash', 'Cash'),
     )
 

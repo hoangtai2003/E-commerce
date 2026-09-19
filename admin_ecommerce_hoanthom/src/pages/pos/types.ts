@@ -12,8 +12,6 @@ export const initials = (name: string) => {
 export const PAYMENT_METHOD_MAP: Record<string, PaymentMethod> = {
     'Tiền mặt': 'cash',
     'Chuyển khoản': 'transfer',
-    'Thẻ tín dụng': 'card',
-    'Ví MoMo': 'momo',
 };
 
 export const variantLabel = (v: ApiProductVariant) => v.variant_name || [v.size, v.color].filter(Boolean).join(' / ') || v.sku;

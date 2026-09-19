@@ -1,6 +1,6 @@
 import {
     User, X, Archive, Ticket, Check, Banknote, SmartphoneNfc,
-    CreditCard, Wallet, Minus, Plus, CheckCircle,
+    Minus, Plus, CheckCircle,
 } from 'lucide-react';
 import type { Customer, Promo } from '../../types';
 import { fmtMoney, initials, type CartItem } from './types';
@@ -193,8 +193,6 @@ export function CartPanel({
                 <div className="pos-payment-methods">
                     <button className={`pos-pay-btn ${payment === 'Tiền mặt' ? 'active' : ''}`} onClick={() => onPaymentChange('Tiền mặt')}><Banknote size={16} /> Tiền mặt</button>
                     <button className={`pos-pay-btn ${payment === 'Chuyển khoản' ? 'active' : ''}`} onClick={() => onPaymentChange('Chuyển khoản')}><SmartphoneNfc size={16} /> Chuyển khoản</button>
-                    <button className={`pos-pay-btn ${payment === 'Thẻ tín dụng' ? 'active' : ''}`} onClick={() => onPaymentChange('Thẻ tín dụng')}><CreditCard size={16} /> Thẻ tín dụng</button>
-                    <button className={`pos-pay-btn ${payment === 'Ví MoMo' ? 'active' : ''}`} onClick={() => onPaymentChange('Ví MoMo')}><Wallet size={16} /> Ví MoMo</button>
                 </div>
 
                 {payment === "Tiền mặt" && (

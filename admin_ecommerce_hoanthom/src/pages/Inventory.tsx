@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PackagePlus, ClipboardEdit, Search, History } from 'lucide-react';
+import { PackagePlus, ClipboardEdit, Search, History, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getCategories } from '../services/categories';
 import { getProducts, type ApiProduct } from '../services/products';
 import { getProductVariants, type ApiProductVariant } from '../services/productVariants';
@@ -64,6 +64,8 @@ export function Inventory() {
 
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [page, setPage] = useState(1);
+    const per = 20;
 
     const [restockVariant, setRestockVariant] = useState<VariantRow | 'pick' | null>(null);
     const [formVariantId, setFormVariantId] = useState<number>(0);
@@ -127,7 +129,14 @@ export function Inventory() {
             .sort((a, b) => a.stock - b.stock);
     }, [rows, search, statusFilter]);
 
-    const recentMovements = useMemo(() => movements.slice(0, 20), [movements]);
+    useEffect(() => {
+        setPage(1);
+    }, [search, statusFilter]);
+
+    const totalItems = filteredRows.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / per));
+    const currentRows = filteredRows.slice((page - 1) * per, page * per);
+
 
     const variantMeta = (variantId: number) => {
         const v = apiVariants.find(x => x.id === variantId);
@@ -237,7 +246,7 @@ export function Inventory() {
                                         </div>
                                     </td>
                                 </tr>
-                            ) : filteredRows.length === 0 ? (
+                            ) : currentRows.length === 0 ? (
                                 <tr>
                                     <td colSpan={9}>
                                         <div className="empty-state">
@@ -247,7 +256,7 @@ export function Inventory() {
                                     </td>
                                 </tr>
                             ) : (
-                                filteredRows.map(r => {
+                                currentRows.map(r => {
                                     const s = VARIANT_STATUS[r.status] ?? VARIANT_STATUS.active;
                                     return (
                                         <tr key={r.id}>
@@ -280,6 +289,21 @@ export function Inventory() {
                         </tbody>
                     </table>
                 </div>
+
+                <div className="table-foot">
+                    <p className="table-count">
+                        {totalItems > 0 ? `Hiển thị ${(page - 1) * per + 1}–${Math.min(page * per, totalItems)} trong ${totalItems} biến thể` : "0 biến thể"}
+                    </p>
+                    <div className="pagination">
+                        <button className="page-btn" disabled={page === 1} onClick={() => setPage(page - 1)}><ChevronLeft size={16} /></button>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                            <button key={p} className={`page-btn ${p === page ? 'active' : ''}`} onClick={() => setPage(p)}>
+                                {p}
+                            </button>
+                        ))}
+                        <button className="page-btn" disabled={page === totalPages} onClick={() => setPage(page + 1)}><ChevronRight size={16} /></button>
+                    </div>
+                </div>
             </div>
 
             <div className="card" style={{ marginTop: 20 }}>
@@ -288,9 +312,9 @@ export function Inventory() {
                         <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}><History size={18} /> Lịch sử nhập/xuất gần đây</h3>
                     </div>
                 </div>
-                <div className="table-wrap">
+                <div className="table-wrap" style={{ maxHeight: 480, overflowY: 'auto' }}>
                     <table className="table">
-                        <thead>
+                        <thead style={{ position: 'sticky', top: 0, background: 'var(--surface)', zIndex: 1 }}>
                             <tr>
                                 <th>Thời gian</th>
                                 <th>Sản phẩm</th>
@@ -302,7 +326,7 @@ export function Inventory() {
                             </tr>
                         </thead>
                         <tbody>
-                            {recentMovements.length === 0 ? (
+                            {movements.length === 0 ? (
                                 <tr>
                                     <td colSpan={7}>
                                         <div className="empty-state">
@@ -311,7 +335,7 @@ export function Inventory() {
                                     </td>
                                 </tr>
                             ) : (
-                                recentMovements.map(m => {
+                                movements.map(m => {
                                     const meta = variantMeta(m.variant);
                                     const staffName = m.staff ? (userById.get(m.staff)?.full_name ?? '—') : '—';
                                     return (

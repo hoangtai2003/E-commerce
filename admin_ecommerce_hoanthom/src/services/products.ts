@@ -6,6 +6,7 @@ export type ApiProduct = {
     default_supplier: number | null;
     name: string;
     description: string | null;
+    unit: string;
     is_active: boolean;
     created_at: string;
     updated_at: string;
@@ -17,6 +18,7 @@ export type ProductPayload = {
     default_supplier?: number | null;
     name: string;
     description?: string | null;
+    unit?: string;
     is_active: boolean;
 };
 

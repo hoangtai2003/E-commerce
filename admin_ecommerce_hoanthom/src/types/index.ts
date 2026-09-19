@@ -29,7 +29,9 @@ export interface Product {
   name: string;
   sku: string;
   category: string;
+  unit: string;
   price: number;
+  costPrice: number | null;
   stock: number;
   sold: number;
   status: "active" | "low" | "out" | "hidden";

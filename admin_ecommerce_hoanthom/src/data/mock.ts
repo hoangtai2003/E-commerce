@@ -3,18 +3,18 @@ import type { Product, Customer, Order, Promo, Notif, Activity, CategoryRevenue,
 export const CATEGORIES = ["Thời trang", "Công nghệ", "Phụ kiện", "Mỹ phẩm", "Gia dụng"];
 
 export const mockProducts: Product[] = [
-  { id: 1,  name: "Tai nghe không dây Pulse X", sku: "TN-PULSE-X",  category: "Công nghệ",  price: 1290000, stock: 84,  sold: 512, status: "active", emoji: "🎧", tint: "#EDEBFF", variants: [{ label: "Đen", stock: 40 }, { label: "Trắng", stock: 30 }, { label: "Xanh navy", stock: 14 }] },
-  { id: 2,  name: "Giày sneaker Cloudstep",      sku: "GD-CLOUD-01", category: "Thời trang", price: 890000,  stock: 12,  sold: 431, status: "low",    emoji: "👟", tint: "#E4F6F1", variants: [{ label: "38 / Trắng", stock: 4 }, { label: "39 / Trắng", stock: 3 }, { label: "40 / Đen", stock: 5 }] },
-  { id: 3,  name: "Áo thun cotton Basic Tee",    sku: "AT-BASIC-22", category: "Thời trang", price: 199000,  stock: 230, sold: 389, status: "active", emoji: "👕", tint: "#FFF1E4", variants: [{ label: "S / Trắng", stock: 60 }, { label: "M / Đen", stock: 90 }, { label: "L / Xám", stock: 80 }] },
-  { id: 4,  name: "Đồng hồ thông minh Nova S2",  sku: "DH-NOVA-S2",  category: "Công nghệ",  price: 2450000, stock: 0,   sold: 356, status: "out",    emoji: "⌚", tint: "#E8F0FE", variants: [{ label: "Dây silicon", stock: 0 }, { label: "Dây da", stock: 0 }] },
-  { id: 5,  name: "Balo chống nước UrbanPack",   sku: "BL-URBAN-9",  category: "Phụ kiện",   price: 560000,  stock: 47,  sold: 298, status: "active", emoji: "🎒", tint: "#FDEBF1", variants: [{ label: "20L / Đen", stock: 25 }, { label: "26L / Xám", stock: 22 }] },
-  { id: 6,  name: "Bàn phím cơ Keychron K2",     sku: "BP-KEY-K2",   category: "Công nghệ",  price: 1850000, stock: 31,  sold: 245, status: "active", emoji: "⌨️", tint: "#EAF7E6", variants: [{ label: "Red switch", stock: 15 }, { label: "Brown switch", stock: 16 }] },
-  { id: 7,  name: "Son kem lì Velvet Rose",      sku: "SK-VEL-04",   category: "Mỹ phẩm",    price: 245000,  stock: 8,   sold: 233, status: "low",    emoji: "💄", tint: "#FFE9EC", variants: [{ label: "04 Đỏ gạch", stock: 3 }, { label: "07 Hồng đất", stock: 5 }] },
-  { id: 8,  name: "Chuột không dây Glide Pro",   sku: "CH-GLIDE-P",  category: "Công nghệ",  price: 690000,  stock: 66,  sold: 187, status: "active", emoji: "🖱️", tint: "#EDEBFF", variants: [{ label: "Đen", stock: 40 }, { label: "Trắng", stock: 26 }] },
-  { id: 9,  name: "Nến thơm Lavender Calm",      sku: "NT-LAV-30",   category: "Gia dụng",   price: 185000,  stock: 120, sold: 164, status: "active", emoji: "🕯️", tint: "#F3ECFF", variants: [{ label: "200g", stock: 70 }, { label: "350g", stock: 50 }] },
-  { id: 10, name: "Kem dưỡng ẩm HydraGlow",      sku: "KD-HYD-50",   category: "Mỹ phẩm",    price: 320000,  stock: 55,  sold: 142, status: "active", emoji: "🧴", tint: "#E4F6F1", variants: [{ label: "50ml", stock: 35 }, { label: "100ml", stock: 20 }] },
-  { id: 11, name: "Túi tote canvas Daily",       sku: "TT-CANV-01",  category: "Phụ kiện",   price: 150000,  stock: 0,   sold: 121, status: "hidden", emoji: "👜", tint: "#FFF6DE", variants: [{ label: "Kem", stock: 0 }, { label: "Đen", stock: 0 }] },
-  { id: 12, name: "Máy xay sinh tố MiniBlend",   sku: "MX-BLEND-3",  category: "Gia dụng",   price: 430000,  stock: 27,  sold: 96,  status: "active", emoji: "🥤", tint: "#E8F0FE", variants: [{ label: "300ml", stock: 15 }, { label: "500ml", stock: 12 }] },
+  { id: 1,  name: "Tai nghe không dây Pulse X", sku: "TN-PULSE-X",  category: "Công nghệ", unit: "Cái",  price: 1290000, costPrice: null, stock: 84,  sold: 512, status: "active", emoji: "🎧", tint: "#EDEBFF", variants: [{ label: "Đen", stock: 40 }, { label: "Trắng", stock: 30 }, { label: "Xanh navy", stock: 14 }] },
+  { id: 2,  name: "Giày sneaker Cloudstep",      sku: "GD-CLOUD-01", category: "Thời trang", unit: "Cái", price: 890000, costPrice: null,  stock: 12,  sold: 431, status: "low",    emoji: "👟", tint: "#E4F6F1", variants: [{ label: "38 / Trắng", stock: 4 }, { label: "39 / Trắng", stock: 3 }, { label: "40 / Đen", stock: 5 }] },
+  { id: 3,  name: "Áo thun cotton Basic Tee",    sku: "AT-BASIC-22", category: "Thời trang", unit: "Cái", price: 199000, costPrice: null,  stock: 230, sold: 389, status: "active", emoji: "👕", tint: "#FFF1E4", variants: [{ label: "S / Trắng", stock: 60 }, { label: "M / Đen", stock: 90 }, { label: "L / Xám", stock: 80 }] },
+  { id: 4,  name: "Đồng hồ thông minh Nova S2",  sku: "DH-NOVA-S2",  category: "Công nghệ", unit: "Cái",  price: 2450000, costPrice: null, stock: 0,   sold: 356, status: "out",    emoji: "⌚", tint: "#E8F0FE", variants: [{ label: "Dây silicon", stock: 0 }, { label: "Dây da", stock: 0 }] },
+  { id: 5,  name: "Balo chống nước UrbanPack",   sku: "BL-URBAN-9",  category: "Phụ kiện", unit: "Cái",   price: 560000, costPrice: null,  stock: 47,  sold: 298, status: "active", emoji: "🎒", tint: "#FDEBF1", variants: [{ label: "20L / Đen", stock: 25 }, { label: "26L / Xám", stock: 22 }] },
+  { id: 6,  name: "Bàn phím cơ Keychron K2",     sku: "BP-KEY-K2",   category: "Công nghệ", unit: "Cái",  price: 1850000, costPrice: null, stock: 31,  sold: 245, status: "active", emoji: "⌨️", tint: "#EAF7E6", variants: [{ label: "Red switch", stock: 15 }, { label: "Brown switch", stock: 16 }] },
+  { id: 7,  name: "Son kem lì Velvet Rose",      sku: "SK-VEL-04",   category: "Mỹ phẩm", unit: "Cái",    price: 245000, costPrice: null,  stock: 8,   sold: 233, status: "low",    emoji: "💄", tint: "#FFE9EC", variants: [{ label: "04 Đỏ gạch", stock: 3 }, { label: "07 Hồng đất", stock: 5 }] },
+  { id: 8,  name: "Chuột không dây Glide Pro",   sku: "CH-GLIDE-P",  category: "Công nghệ", unit: "Cái",  price: 690000, costPrice: null,  stock: 66,  sold: 187, status: "active", emoji: "🖱️", tint: "#EDEBFF", variants: [{ label: "Đen", stock: 40 }, { label: "Trắng", stock: 26 }] },
+  { id: 9,  name: "Nến thơm Lavender Calm",      sku: "NT-LAV-30",   category: "Gia dụng", unit: "Cái",   price: 185000, costPrice: null,  stock: 120, sold: 164, status: "active", emoji: "🕯️", tint: "#F3ECFF", variants: [{ label: "200g", stock: 70 }, { label: "350g", stock: 50 }] },
+  { id: 10, name: "Kem dưỡng ẩm HydraGlow",      sku: "KD-HYD-50",   category: "Mỹ phẩm", unit: "Cái",    price: 320000, costPrice: null,  stock: 55,  sold: 142, status: "active", emoji: "🧴", tint: "#E4F6F1", variants: [{ label: "50ml", stock: 35 }, { label: "100ml", stock: 20 }] },
+  { id: 11, name: "Túi tote canvas Daily",       sku: "TT-CANV-01",  category: "Phụ kiện", unit: "Cái",   price: 150000, costPrice: null,  stock: 0,   sold: 121, status: "hidden", emoji: "👜", tint: "#FFF6DE", variants: [{ label: "Kem", stock: 0 }, { label: "Đen", stock: 0 }] },
+  { id: 12, name: "Máy xay sinh tố MiniBlend",   sku: "MX-BLEND-3",  category: "Gia dụng", unit: "Cái",   price: 430000, costPrice: null,  stock: 27,  sold: 96,  status: "active", emoji: "🥤", tint: "#E8F0FE", variants: [{ label: "300ml", stock: 15 }, { label: "500ml", stock: 12 }] },
 ];
 
 export const mockCustomers: Customer[] = [
@@ -31,21 +31,21 @@ export const mockCustomers: Customer[] = [
 ];
 
 export const mockOrders: Order[] = [
-  { id: 1,  code: "AUR-2607", customerId: 1,  date: "2026-07-07T08:42", payment: "Ví MoMo",       status: "pending",   items: [{ productId: 1, variant: "Đen", qty: 1 }, { productId: 7, variant: "04 Đỏ gạch", qty: 2 }] },
+  { id: 1,  code: "AUR-2607", customerId: 1,  date: "2026-07-07T08:42", payment: "Tiền mặt",      status: "pending",   items: [{ productId: 1, variant: "Đen", qty: 1 }, { productId: 7, variant: "04 Đỏ gạch", qty: 2 }] },
   { id: 2,  code: "AUR-2606", customerId: 6,  date: "2026-07-07T07:15", payment: "COD",           status: "pending",   items: [{ productId: 3, variant: "M / Đen", qty: 3 }] },
   { id: 3,  code: "AUR-2605", customerId: 4,  date: "2026-07-06T21:03", payment: "Chuyển khoản",  status: "pending",   items: [{ productId: 6, variant: "Brown switch", qty: 1 }, { productId: 8, variant: "Trắng", qty: 1 }] },
-  { id: 4,  code: "AUR-2604", customerId: 2,  date: "2026-07-06T18:37", payment: "Thẻ tín dụng",  status: "shipping",  items: [{ productId: 2, variant: "39 / Trắng", qty: 1 }] },
-  { id: 5,  code: "AUR-2603", customerId: 9,  date: "2026-07-06T14:20", payment: "Ví MoMo",       status: "shipping",  items: [{ productId: 5, variant: "26L / Xám", qty: 1 }, { productId: 9, variant: "350g", qty: 2 }] },
+  { id: 4,  code: "AUR-2604", customerId: 2,  date: "2026-07-06T18:37", payment: "Chuyển khoản", status: "shipping",  items: [{ productId: 2, variant: "39 / Trắng", qty: 1 }] },
+  { id: 5,  code: "AUR-2603", customerId: 9,  date: "2026-07-06T14:20", payment: "Tiền mặt",      status: "shipping",  items: [{ productId: 5, variant: "26L / Xám", qty: 1 }, { productId: 9, variant: "350g", qty: 2 }] },
   { id: 6,  code: "AUR-2602", customerId: 3,  date: "2026-07-06T10:55", payment: "COD",           status: "shipping",  items: [{ productId: 10, variant: "50ml", qty: 2 }] },
   { id: 7,  code: "AUR-2601", customerId: 7,  date: "2026-07-05T19:48", payment: "Chuyển khoản",  status: "completed", items: [{ productId: 4, variant: "Dây da", qty: 1 }, { productId: 12, variant: "500ml", qty: 1 }] },
   { id: 8,  code: "AUR-2600", customerId: 5,  date: "2026-07-05T16:12", payment: "COD",           status: "completed", items: [{ productId: 3, variant: "L / Xám", qty: 2 }, { productId: 11, variant: "Kem", qty: 1 }] },
-  { id: 9,  code: "AUR-2599", customerId: 1,  date: "2026-07-05T09:30", payment: "Thẻ tín dụng",  status: "completed", items: [{ productId: 1, variant: "Trắng", qty: 2 }] },
-  { id: 10, code: "AUR-2598", customerId: 8,  date: "2026-07-04T20:05", payment: "Ví MoMo",       status: "completed", items: [{ productId: 9, variant: "200g", qty: 3 }, { productId: 7, variant: "07 Hồng đất", qty: 1 }] },
+  { id: 9,  code: "AUR-2599", customerId: 1,  date: "2026-07-05T09:30", payment: "Chuyển khoản", status: "completed", items: [{ productId: 1, variant: "Trắng", qty: 2 }] },
+  { id: 10, code: "AUR-2598", customerId: 8,  date: "2026-07-04T20:05", payment: "Tiền mặt",      status: "completed", items: [{ productId: 9, variant: "200g", qty: 3 }, { productId: 7, variant: "07 Hồng đất", qty: 1 }] },
   { id: 11, code: "AUR-2597", customerId: 10, date: "2026-07-04T15:44", payment: "COD",           status: "cancelled", items: [{ productId: 2, variant: "40 / Đen", qty: 1 }] },
   { id: 12, code: "AUR-2596", customerId: 4,  date: "2026-07-04T11:28", payment: "Chuyển khoản",  status: "completed", items: [{ productId: 6, variant: "Red switch", qty: 1 }] },
-  { id: 13, code: "AUR-2595", customerId: 2,  date: "2026-07-03T22:19", payment: "Ví MoMo",       status: "completed", items: [{ productId: 8, variant: "Đen", qty: 1 }, { productId: 5, variant: "20L / Đen", qty: 1 }] },
+  { id: 13, code: "AUR-2595", customerId: 2,  date: "2026-07-03T22:19", payment: "Tiền mặt",      status: "completed", items: [{ productId: 8, variant: "Đen", qty: 1 }, { productId: 5, variant: "20L / Đen", qty: 1 }] },
   { id: 14, code: "AUR-2594", customerId: 9,  date: "2026-07-03T13:52", payment: "COD",           status: "cancelled", items: [{ productId: 12, variant: "300ml", qty: 2 }] },
-  { id: 15, code: "AUR-2593", customerId: 3,  date: "2026-07-03T08:06", payment: "Thẻ tín dụng",  status: "completed", items: [{ productId: 10, variant: "100ml", qty: 1 }, { productId: 3, variant: "S / Trắng", qty: 2 }] },
+  { id: 15, code: "AUR-2593", customerId: 3,  date: "2026-07-03T08:06", payment: "Chuyển khoản", status: "completed", items: [{ productId: 10, variant: "100ml", qty: 1 }, { productId: 3, variant: "S / Trắng", qty: 2 }] },
 ];
 
 export const mockPromos: Promo[] = [

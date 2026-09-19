@@ -18,8 +18,6 @@ const ORDER_STATUS: Record<OrderStatus, { label: string, tone: string, grad: str
 const PAYMENT_LABELS: Record<PaymentMethod, string> = {
     cod: "COD",
     transfer: "Chuyển khoản",
-    card: "Thẻ tín dụng",
-    momo: "Ví MoMo",
     cash: "Tiền mặt",
 };
 

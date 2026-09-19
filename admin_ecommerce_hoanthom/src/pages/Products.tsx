@@ -22,6 +22,7 @@ import {
     type ApiProductImage,
 } from '../services/productImages';
 import { useToast } from '../contexts/ToastContext';
+import { useOrders } from '../contexts/OrdersContext';
 import { Modal } from '../components/ui/Modal';
 
 const PRODUCT_STATUS: Record<string, { label: string, tone: string }> = {
@@ -41,13 +42,14 @@ const existingImageKey = (id: number) => `existing-${id}`;
 
 export function Products() {
     const { showToast } = useToast();
+    const { orders } = useOrders();
     const [search, setSearch] = useState('');
     const [category, setCategory] = useState('all');
     const [status, setStatus] = useState('all');
     const [sortKey, setSortKey] = useState<keyof Product>('sold');
     const [sortDir, setSortDir] = useState<-1 | 1>(-1);
     const [page, setPage] = useState(1);
-    const per = 10;
+    const per = 20;
 
     const [categories, setCategories] = useState<Category[]>([]);
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -64,6 +66,7 @@ export function Products() {
     const [formCategoryId, setFormCategoryId] = useState<number>(0);
     const [formSupplierId, setFormSupplierId] = useState<number>(0);
     const [formName, setFormName] = useState('');
+    const [formUnit, setFormUnit] = useState('Cái');
     const [formHidden, setFormHidden] = useState(false);
 
     const [existingImages, setExistingImages] = useState<ApiProductImage[]>([]);
@@ -84,11 +87,25 @@ export function Products() {
             .finally(() => setLoading(false));
     }, [showToast]);
 
+    const soldByProduct = useMemo(() => {
+        const variantById = new Map(apiVariants.map(v => [v.id, v]));
+        const sold = new Map<number, number>();
+        orders.filter(o => o.status !== 'cancelled').forEach(o => {
+            o.items.forEach(it => {
+                const v = variantById.get(it.variant);
+                if (!v) return;
+                sold.set(v.product, (sold.get(v.product) ?? 0) + it.quantity);
+            });
+        });
+        return sold;
+    }, [orders, apiVariants]);
+
     const products: Product[] = useMemo(() => {
         const categoryNameById = new Map(categories.map(c => [c.id, c.name]));
         return apiProducts.map(p => {
             const variants = apiVariants.filter(v => v.product === p.id);
             const prices = variants.map(v => v.price);
+            const costPrices = variants.map(v => v.cost_price).filter((c): c is number => c != null);
             const totalStock = variants.reduce((sum, v) => sum + v.stock, 0);
             const derivedStatus: Product['status'] = !p.is_active
                 ? 'hidden'
@@ -103,16 +120,18 @@ export function Products() {
                 name: p.name,
                 sku: variants[0]?.sku ?? '—',
                 category: categoryNameById.get(p.category) ?? '—',
+                unit: p.unit,
                 price: prices.length ? Math.min(...prices) : 0,
+                costPrice: costPrices.length ? Math.min(...costPrices) : null,
                 stock: totalStock,
-                sold: 0,
+                sold: soldByProduct.get(p.id) ?? 0,
                 status: derivedStatus,
                 emoji: '📦',
                 tint: '#e5e7eb',
                 variants: variants.map(v => ({ label: variantLabel(v), stock: v.stock })),
             };
         });
-    }, [apiProducts, apiVariants, categories]);
+    }, [apiProducts, apiVariants, categories, soldByProduct]);
 
     const openModal = (p: Product | 'new') => {
         setEditingProduct(p);
@@ -123,6 +142,7 @@ export function Products() {
             setFormCategoryId(categories[0]?.id ?? 0);
             setFormSupplierId(0);
             setFormName('');
+            setFormUnit('Cái');
             setFormHidden(false);
             setEditingVariants([{ sku: '', label: '', price: '', stock: 0 }]);
             setExistingImages([]);
@@ -133,6 +153,7 @@ export function Products() {
             setFormCategoryId(apiProduct.category);
             setFormSupplierId(apiProduct.default_supplier ?? 0);
             setFormName(apiProduct.name);
+            setFormUnit(apiProduct.unit || 'Cái');
             setFormHidden(!apiProduct.is_active);
             const rows = apiVariants
                 .filter(v => v.product === p.id)
@@ -189,6 +210,7 @@ export function Products() {
             category: formCategoryId,
             default_supplier: formSupplierId || null,
             name: formName.trim(),
+            unit: formUnit.trim() || 'Cái',
             is_active: !formHidden,
         };
 
@@ -372,8 +394,10 @@ export function Products() {
                             <tr>
                                 <th className="sortable" onClick={() => handleSort('name')}>Sản phẩm <SortIcon columnKey="name" /></th>
                                 <th>Danh mục</th>
+                                <th>ĐVT</th>
                                 <th>Nhà cung cấp</th>
                                 <th className="sortable" onClick={() => handleSort('price')}>Giá <SortIcon columnKey="price" /></th>
+                                <th className="sortable" onClick={() => handleSort('costPrice')}>Giá nhập <SortIcon columnKey="costPrice" /></th>
                                 <th className="sortable" onClick={() => handleSort('stock')}>Tồn kho <SortIcon columnKey="stock" /></th>
                                 <th className="sortable" onClick={() => handleSort('sold')}>Đã bán <SortIcon columnKey="sold" /></th>
                                 <th>Trạng thái</th>
@@ -383,7 +407,7 @@ export function Products() {
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan={8}>
+                                    <td colSpan={10}>
                                         <div className="empty-state">
                                             <strong>Đang tải…</strong>
                                         </div>
@@ -391,7 +415,7 @@ export function Products() {
                                 </tr>
                             ) : currentRows.length === 0 ? (
                                 <tr>
-                                    <td colSpan={8}>
+                                    <td colSpan={10}>
                                         <div className="empty-state">
                                             <strong>Không tìm thấy sản phẩm</strong>
                                             <p>Thử đổi từ khoá hoặc xoá bớt bộ lọc để xem thêm kết quả.</p>
@@ -425,8 +449,10 @@ export function Products() {
                                                 </div>
                                             </td>
                                             <td data-label="Danh mục"><span className="badge badge--primary">{p.category}</span></td>
+                                            <td data-label="ĐVT" className="cell-muted">{p.unit}</td>
                                             <td data-label="Nhà cung cấp" className="cell-muted">{supplierName ?? '— Chưa xác định —'}</td>
                                             <td data-label="Giá" className="cell-money">{fmtMoney(p.price)}</td>
+                                            <td data-label="Giá nhập" className="cell-money">{p.costPrice != null ? fmtMoney(p.costPrice) : '—'}</td>
                                             <td data-label="Tồn kho" className="stock-cell">
                                                 <span style={{ fontWeight: 600 }}>{p.stock}</span>
                                                 <div className="stock-bar">
@@ -498,6 +524,27 @@ export function Products() {
                                 {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                             </select>
                         </label>
+                        <label className="field">
+                            <span>Đơn vị tính <em className="required-mark">*</em></span>
+                            <input
+                                className="input"
+                                list="product-unit-suggestions"
+                                required
+                                value={formUnit}
+                                onChange={e => setFormUnit(e.target.value)}
+                                placeholder="VD: Cái, Hộp, Chai, Kg…"
+                            />
+                            <datalist id="product-unit-suggestions">
+                                <option value="Cái" />
+                                <option value="Hộp" />
+                                <option value="Chai" />
+                                <option value="Gói" />
+                                <option value="Bộ" />
+                                <option value="Kg" />
+                                <option value="Lon" />
+                                <option value="Thùng" />
+                            </datalist>
+                        </label>
                     </div>
                     <div className="field">
                         <span>Ảnh sản phẩm</span>
@@ -542,64 +589,91 @@ export function Products() {
                     </div>
                     <div className="field">
                         <span>Biến thể (SKU, tên, giá bán)</span>
-                        <div className="variant-list" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <div
+                            className="variant-list"
+                            style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+                        >
+                            <div
+                                className="variant-row variant-row--head"
+                                style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: '1fr 160px 140px 110px 32px',
+                                    gap: 8,
+                                    padding: '0 10px',
+                                }}
+                            >
+                                <span className="cell-muted" style={{ fontSize: 12 }}>Tên biến thể</span>
+                                <span className="cell-muted" style={{ fontSize: 12 }}>SKU</span>
+                                <span className="cell-muted" style={{ fontSize: 12 }}>Giá bán (₫)</span>
+                                <span className="cell-muted" style={{ fontSize: 12 }}>Tồn kho</span>
+                                <span />
+                            </div>
                             {editingVariants.map((v, idx) => (
-                                <div key={idx} className="variant-row" style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 10, border: '1px solid var(--border)', borderRadius: 8 }}>
-                                    <div style={{ display: 'flex', gap: 8 }}>
-                                        <input
-                                            className="input"
-                                            placeholder="Tên biến thể, vd: M / Đen"
-                                            value={v.label}
-                                            onChange={e => {
-                                                const newVars = [...editingVariants];
-                                                newVars[idx] = { ...newVars[idx], label: e.target.value };
-                                                setEditingVariants(newVars);
-                                            }}
-                                            style={{ flex: 1 }}
-                                        />
-                                        <input
-                                            className="input"
-                                            placeholder="SKU"
-                                            required
-                                            value={v.sku}
-                                            onChange={e => {
-                                                const newVars = [...editingVariants];
-                                                newVars[idx] = { ...newVars[idx], sku: e.target.value };
-                                                setEditingVariants(newVars);
-                                            }}
-                                            style={{ width: 160 }}
-                                        />
-                                        <button
-                                            type="button"
-                                            className="icon-btn icon-btn--sm"
-                                            title="Xóa biến thể"
-                                            onClick={() => {
-                                                if (v.id) setDeletedVariantIds(prev => [...prev, v.id!]);
-                                                setEditingVariants(editingVariants.filter((_, i) => i !== idx));
-                                            }}
-                                        >
-                                            <X size={16} />
-                                        </button>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                                        <input
-                                            className="input"
-                                            type="number"
-                                            min="0"
-                                            placeholder="Giá bán (₫)"
-                                            required
-                                            value={v.price}
-                                            onChange={e => {
-                                                const newVars = [...editingVariants];
-                                                newVars[idx] = { ...newVars[idx], price: e.target.value };
-                                                setEditingVariants(newVars);
-                                            }}
-                                            style={{ width: 160 }}
-                                        />
-                                        <span className="cell-muted" style={{ fontSize: 12 }}>
-                                            Tồn kho: {v.stock} (tự động cập nhật qua nhập/bán hàng, không sửa trực tiếp)
-                                        </span>
-                                    </div>
+                                <div
+                                    key={idx}
+                                    className="variant-row"
+                                    style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: '1fr 160px 140px 110px 32px',
+                                        gap: 8,
+                                        alignItems: 'center',
+                                        padding: 10,
+                                        border: '1px solid var(--border)',
+                                        borderRadius: 8,
+                                    }}
+                                >
+                                    <input
+                                        className="input"
+                                        placeholder="Tên biến thể, vd: M / Đen"
+                                        value={v.label}
+                                        onChange={e => {
+                                            const newVars = [...editingVariants];
+                                            newVars[idx] = { ...newVars[idx], label: e.target.value };
+                                            setEditingVariants(newVars);
+                                        }}
+                                    />
+                                    <input
+                                        className="input"
+                                        placeholder="SKU"
+                                        required
+                                        value={v.sku}
+                                        onChange={e => {
+                                            const newVars = [...editingVariants];
+                                            newVars[idx] = { ...newVars[idx], sku: e.target.value };
+                                            setEditingVariants(newVars);
+                                        }}
+                                    />
+                                    <input
+                                        className="input"
+                                        type="number"
+                                        min="0"
+                                        placeholder="Giá bán (₫)"
+                                        required
+                                        value={v.price}
+                                        onChange={e => {
+                                            const newVars = [...editingVariants];
+                                            newVars[idx] = { ...newVars[idx], price: e.target.value };
+                                            setEditingVariants(newVars);
+                                        }}
+                                    />
+                                    <span
+                                        className="cell-muted"
+                                        style={{ fontSize: 13, textAlign: 'center' }}
+                                        title="Tồn kho tự động cập nhật qua nhập/bán hàng, không sửa trực tiếp"
+                                    >
+                                        {v.stock}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        className="icon-btn icon-btn--sm"
+                                        title="Xóa biến thể"
+                                        onClick={() => {
+                                            if (v.id) setDeletedVariantIds(prev => [...prev, v.id!]);
+                                            setEditingVariants(editingVariants.filter((_, i) => i !== idx));
+                                        }}
+                                    >
+                                        <X size={16} />
+                                    </button>
                                 </div>
                             ))}
                         </div>

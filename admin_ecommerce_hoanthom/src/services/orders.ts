@@ -1,7 +1,7 @@
 import { apiRequest } from './api';
 
 export type OrderStatus = 'pending' | 'shipping' | 'completed' | 'cancelled';
-export type PaymentMethod = 'cod' | 'transfer' | 'card' | 'momo' | 'cash';
+export type PaymentMethod = 'cod' | 'transfer' | 'cash';
 
 export type ApiOrderItem = {
     id: number;
